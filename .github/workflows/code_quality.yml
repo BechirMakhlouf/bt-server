@@ -29,3 +29,6 @@ jobs:
           path: false 
           # An explicit key for restoring and saving the cache
           key: "cache-key"
+      - name: format
+        run:
+          rustup component add rustfmt && cargo fmt
