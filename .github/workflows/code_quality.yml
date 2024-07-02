@@ -1,0 +1,28 @@
+name: check code quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  formatting:
+    name: format code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install the Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # - name: Cache
+      #   uses: actions/cache@v4.0.2
+      #   with:
+      #     # A list of files, directories, and wildcard patterns to cache and restore
+      #     path: false 
+      #     # An explicit key for restoring and saving the cache
+      #     key: "cache-key"
