@@ -21,7 +21,8 @@ jobs:
 
       - name: Install the Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
+        with:
+          components: rustfmt
       - name: Cache
         uses: actions/cache@v4.0.2
         with:
@@ -29,6 +30,31 @@ jobs:
           path: false 
           # An explicit key for restoring and saving the cache
           key: "cache-key"
-      - name: format
-        run:
-          rustup component add rustfmt && cargo fmt
+      - name: Enforce formatting
+        run: cargo fmt --check
+  clippy:
+    name: Cippy linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: "cache-key"
+      - name: Linting
+        run: cargo clippy -- -D warnings
+  check:
+    name: Check Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: "cache-key"
+      - name: Cargo Check
+        run: cargo check
