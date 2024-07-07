@@ -1,30 +1,36 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use tonic::transport::Server;
+use tonic_health::{pb::health_server::HealthServer, server::HealthService};
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+// mod proto {
+//     tonic::include_proto!("health");
+//
+//     pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
+//         tonic::include_file_descriptor_set!("helloworld_descriptor");
+// }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let addr = "[::1]:50051".parse().unwrap();
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+    // let reflection_service = tonic_reflection::server::Builder::configure()
+    //     .register_encoded_file_descriptor_set(health::FILE_DESCRIPTOR_SET)
+    //     .build()?;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    // !TODO: change this:
-    println!("halo from the other side! server running on port: 8080");
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("0.0.0.0", 8080))?
-    .run()
-    .await
+    // let service = tonic_reflection::server::Builder::configure()
+    //     .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
+    //     .build()
+    //     .unwrap();
+    let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+    health_reporter
+        .set_not_serving::<HealthServer<HealthService>>()
+        .await;
+
+    // .set_serving::<GreeterServer<MyGreeter>>()
+
+    Server::builder()
+        .add_service(health_service)
+        .serve(addr)
+        .await?;
+
+    Ok(())
 }
