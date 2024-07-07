@@ -4,9 +4,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     tonic_build::configure()
-        .file_descriptor_set_path(out_dir.join("test_descriptor.bin"))
-        .compile(&["proto/test.proto"], &["proto"])?;
+        .file_descriptor_set_path(out_dir.join("descriptor.bin"))
+        .compile(&["proto/health.proto", "proto/test.proto"], &["proto"])?;
 
     tonic_build::compile_protos("proto/test.proto")?;
+    tonic_build::compile_protos("proto/health.proto")?;
     Ok(())
 }
