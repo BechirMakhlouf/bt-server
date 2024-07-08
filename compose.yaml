@@ -17,7 +17,7 @@ services:
   db:
     image: postgres:latest
     environment:
-      POSTGRES_PASSWORD: pass
+      POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
       POSTGRES_PORT: 5432
       POSTGRES_HOST: localhost
