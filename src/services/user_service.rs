@@ -1,5 +1,5 @@
 use crate::{
-    models::NewUser,
+    models::user::NewUser,
     services::proto::{user_server::User, CreateUserRequest, CreateUserResponse},
 };
 use tonic::{Request, Response};
