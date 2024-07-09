@@ -1,3 +1,4 @@
+#![allow(unused)]
 mod test_service;
 mod user_service;
 pub mod proto {
