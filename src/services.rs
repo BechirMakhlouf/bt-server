@@ -23,14 +23,10 @@ pub fn create_health_service() -> HealthServer<impl Health> {
 }
 
 pub fn create_reflection_service() -> ServerReflectionServer<impl ServerReflection> {
-    let r = tonic_reflection::server::Builder::configure()
-        .include_reflection_service(true)
+    tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
         .build()
-        .unwrap();
-
-    r
-
-    // tonic_reflection::pb::v1::server_reflection_server::ServerReflectionServer::new()
+        .unwrap()
 }
 
 pub fn create_test_service() -> TestServer<TestService> {

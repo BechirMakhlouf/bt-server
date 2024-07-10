@@ -10,8 +10,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &["proto"],
         )?;
 
-    // tonic_build::compile_protos("proto/test.proto")?;
-    // tonic_build::compile_protos("proto/health.proto")?;
-    // tonic_build::compile_protos("proto/user.proto")?;
+    tonic_build::compile_protos("proto/test.proto")?;
+    tonic_build::compile_protos("proto/health.proto")?;
+    tonic_build::compile_protos("proto/user.proto")?;
     Ok(())
 }
