@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let application_settings = ApplicationSettings::get_settings().unwrap();
 
-    let _db_pool = application_settings
+    let db_pool = application_settings
         .database
         .get_db_pool::<Postgres>()
         .await
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         .add_service(services::create_reflection_service())
-        .add_service(services::create_user_service())
+        .add_service(services::create_user_service(db_pool.clone()))
         .add_service(services::create_test_service())
         .serve(addr)
         .await?;

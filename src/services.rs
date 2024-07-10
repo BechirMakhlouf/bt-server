@@ -10,6 +10,7 @@ pub mod proto {
 
 pub use proto::test_server::TestServer;
 use proto::user_server::UserServer;
+use sqlx::{Pool, Postgres};
 pub use test_service::TestService;
 
 use tonic_health::pb::health_server::{Health, HealthServer};
@@ -22,16 +23,20 @@ pub fn create_health_service() -> HealthServer<impl Health> {
 }
 
 pub fn create_reflection_service() -> ServerReflectionServer<impl ServerReflection> {
-    tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
+    let r = tonic_reflection::server::Builder::configure()
+        .include_reflection_service(true)
         .build()
-        .unwrap()
+        .unwrap();
+
+    r
+
+    // tonic_reflection::pb::v1::server_reflection_server::ServerReflectionServer::new()
 }
 
 pub fn create_test_service() -> TestServer<TestService> {
     TestServer::new(TestService::default())
 }
 
-pub fn create_user_service() -> UserServer<UserService> {
-    UserServer::new(UserService::default())
+pub fn create_user_service(db_pool: Pool<Postgres>) -> UserServer<UserService> {
+    UserServer::new(UserService::new(db_pool))
 }

@@ -4,4 +4,4 @@ use tonic::IntoRequest;
 
 mod user_repository;
 
-use user_repository::*;
+pub use user_repository::*;

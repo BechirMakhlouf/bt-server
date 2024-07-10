@@ -22,7 +22,6 @@ impl UserId {
     pub fn new() -> Self {
         Self(uuid::Uuid::new_v4())
     }
-
     pub fn get_value(&self) -> &Uuid {
         &self.0
     }

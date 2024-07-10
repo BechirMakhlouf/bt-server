@@ -4,14 +4,17 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 #[derive(Debug)]
-struct UserRepository<'a> {
-    database: &'a Pool<Postgres>,
+pub struct UserRepository {
+    database: Pool<Postgres>,
 }
 
 use crate::models::user::{Email, HashedPassword, NewUser, Password, User, UserId};
 
-impl UserRepository<'_> {
-    async fn add(&self, new_user: &NewUser) -> Result<UserId, sqlx::Error> {
+impl UserRepository {
+    pub fn new(db_pool: Pool<Postgres>) -> Self {
+        Self { database: db_pool }
+    }
+    pub async fn add(&self, new_user: &NewUser) -> Result<UserId, sqlx::Error> {
         let (hashed_password, salt_string) = new_user.password.hash_with_salt();
 
         let query_result = sqlx::query!(
@@ -20,16 +23,16 @@ impl UserRepository<'_> {
             hashed_password.to_string(),
             salt_string,
         )
-        .fetch_one(self.database)
+        .fetch_one(&self.database)
         .await?;
 
         Ok(UserId::from(query_result.id))
     }
 
-    async fn get_by_id(&self, id: UserId) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_by_id(&self, id: UserId) -> Result<Option<User>, sqlx::Error> {
         let uuid = Uuid::from(&id);
         let result = sqlx::query!("SELECT * FROM users WHERE id = $1", uuid)
-            .fetch_one(self.database)
+            .fetch_one(&self.database)
             .await?;
 
         Ok(Some(User {
@@ -39,9 +42,9 @@ impl UserRepository<'_> {
         }))
     }
 
-    async fn get_by_email(&self, email: Email) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_by_email(&self, email: Email) -> Result<Option<User>, sqlx::Error> {
         let result = sqlx::query!("SELECT * FROM users WHERE email = $1", email.as_str())
-            .fetch_optional(self.database)
+            .fetch_optional(&self.database)
             .await?;
 
         match result {
@@ -54,17 +57,17 @@ impl UserRepository<'_> {
         }
     }
 
-    async fn delete(&self, id: &UserId) -> Result<u64, sqlx::Error> {
+    pub async fn delete(&self, id: &UserId) -> Result<u64, sqlx::Error> {
         let uuid: uuid::Uuid = Uuid::from(id);
 
         let result = sqlx::query!("DELETE FROM users WHERE id = $1", uuid)
-            .execute(self.database)
+            .execute(&self.database)
             .await?;
 
         Ok(result.rows_affected())
     }
 
-    async fn update(&self, user: User) -> Result<User, sqlx::Error> {
+    pub async fn update(&self, user: User) -> Result<User, sqlx::Error> {
         let uuid = Uuid::from(&user.id);
 
         let result = sqlx::query!(
@@ -72,7 +75,7 @@ impl UserRepository<'_> {
             user.email.as_str(),
             uuid,
         )
-        .fetch_one(self.database)
+        .fetch_one(&self.database)
         .await?;
 
         Ok(User {
@@ -82,7 +85,7 @@ impl UserRepository<'_> {
         })
     }
 
-    async fn update_password(
+    pub async fn update_password(
         &self,
         user: User,
         new_password: &Password,
@@ -97,7 +100,7 @@ impl UserRepository<'_> {
             salt_string,
             uuid,
         )
-        .fetch_one(self.database)
+        .fetch_one(&self.database)
         .await?;
 
         Ok(User {
