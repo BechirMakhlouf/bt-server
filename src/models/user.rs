@@ -71,13 +71,13 @@ impl Password {
             false => Err("Invalid Password"),
         }
     }
-    pub fn hash_with_salt(&self) -> (HashedPassword, String) {
+    pub fn hash_with_salt(&self) -> HashedPassword {
         use bcrypt::Version;
         let hash_result = bcrypt::hash_with_salt::<&str>(self.as_str(), 6, rand::random()).unwrap();
         let hashed_password = hash_result.format_for_version(Version::TwoB);
         let salt = hash_result.get_salt();
         drop(hash_result);
-        (HashedPassword::from_trusted_str(&hashed_password), salt)
+        HashedPassword::from_trusted_str(&hashed_password)
     }
     pub fn as_str(&self) -> &str {
         self.0.expose_secret()
@@ -93,10 +93,15 @@ impl HashedPassword {
         Self(hashed_password.to_string())
     }
 
-    // pub fn as_str(&self) -> &str {
-    //     &self.0
-    // }
+    pub fn compare_with(&self, password: &Password) -> bool {
+        bcrypt::verify(password.as_str(), self.as_str()).unwrap()
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
+
 impl Display for HashedPassword {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
@@ -122,4 +127,19 @@ pub struct User {
     pub email: Email,
     pub hashed_password: HashedPassword,
     pub id: UserId,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compare_passwords() {
+        let my_password = Password::parse("pass_pass").expect("errored on a valid password");
+        let hashed_password = my_password.hash_with_salt();
+
+        let re = hashed_password.compare_with(&my_password);
+
+        assert!(re, "supposed to be corrrect");
+    }
 }

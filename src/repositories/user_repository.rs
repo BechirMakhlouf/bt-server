@@ -15,13 +15,12 @@ impl UserRepository {
         Self { database: db_pool }
     }
     pub async fn add(&self, new_user: &NewUser) -> Result<UserId, sqlx::Error> {
-        let (hashed_password, salt_string) = new_user.password.hash_with_salt();
+        let hashed_password = new_user.password.hash_with_salt();
 
         let query_result = sqlx::query!(
-            "INSERT INTO users (email, hashed_password, salt) VALUES ($1, $2, $3) RETURNING id",
+            "INSERT INTO users (email, hashed_password) VALUES ($1, $2) RETURNING id",
             &new_user.email.as_str(),
             hashed_password.to_string(),
-            salt_string,
         )
         .fetch_one(&self.database)
         .await?;
@@ -92,12 +91,11 @@ impl UserRepository {
     ) -> Result<User, sqlx::Error> {
         let uuid = Uuid::from(&user.id);
 
-        let (hashed_password, salt_string) = new_password.hash_with_salt();
+        let hashed_password = new_password.hash_with_salt();
 
         let result = sqlx::query!(
-            "UPDATE users SET hashed_password = $1, salt = $2 WHERE id = $3 returning *",
+            "UPDATE users SET hashed_password = $1 WHERE id = $2 returning *",
             hashed_password.to_string(),
-            salt_string,
             uuid,
         )
         .fetch_one(&self.database)
