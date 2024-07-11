@@ -3,11 +3,11 @@ use std::net::TcpListener;
 use configuration::ApplicationSettings;
 use sqlx::Postgres;
 use tonic::transport::Server;
+mod auth;
 mod configuration;
 mod models;
 mod repositories;
 mod services;
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv().unwrap();

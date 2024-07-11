@@ -2,7 +2,7 @@
 use std::fmt::Display;
 
 use secrecy::ExposeSecret;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Email Type
@@ -15,7 +15,7 @@ pub struct Password(secrecy::Secret<String>);
 #[derive(Debug, Deserialize)]
 pub struct HashedPassword(String);
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
 pub struct UserId(uuid::Uuid);
 
 impl UserId {
@@ -140,6 +140,6 @@ mod tests {
 
         let re = hashed_password.compare_with(&my_password);
 
-        assert!(re, "supposed to be corrrect");
+        assert!(re, "Password verification should be correct.");
     }
 }
