@@ -21,6 +21,7 @@ pub struct ApplicationSettings {
 
 impl ApplicationSettings {
     pub fn get_settings() -> Result<Self, envy::Error> {
+        let _ = dotenvy::dotenv().unwrap();
         let EnvVars {
             database_url,
             jwt_secret,

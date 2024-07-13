@@ -3,18 +3,31 @@
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
+// trait UserRepositoryInterface {
+//     async fn add(&self, new_user: &NewUser) -> Self;
+//     async fn get_by_id(&self, id: Id) -> Result<Option<User>, sqlx::Error>;
+//     async fn get_by_email(&self, id: Id) -> Result<Option<User>, sqlx::Error>;
+//     async fn delete(&self, id: &Id) -> Result<u64, sqlx::Error>;
+//     async fn update(&self, user: User) -> Result<User, sqlx::Error>;
+//     async fn update_password(
+//         &self,
+//         user: User,
+//         new_password: &Password,
+//     ) -> Result<User, sqlx::Error>;
+// }
+
 #[derive(Debug)]
 pub struct UserRepository {
     database: Pool<Postgres>,
 }
 
-use crate::models::user::{Email, HashedPassword, NewUser, Password, User, UserId};
+use crate::models::user::{Email, HashedPassword, Id, NewUser, Password, User};
 
 impl UserRepository {
     pub fn new(db_pool: Pool<Postgres>) -> Self {
         Self { database: db_pool }
     }
-    pub async fn add(&self, new_user: &NewUser) -> Result<UserId, sqlx::Error> {
+    pub async fn add(&self, new_user: &NewUser) -> Result<Id, sqlx::Error> {
         let hashed_password = new_user.password.hash_with_salt();
 
         let query_result = sqlx::query!(
@@ -25,30 +38,30 @@ impl UserRepository {
         .fetch_one(&self.database)
         .await?;
 
-        Ok(UserId::from(query_result.id))
+        Ok(Id::from(query_result.id))
     }
 
-    pub async fn get_by_id(&self, id: UserId) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_by_id(&self, id: Id) -> Result<Option<User>, sqlx::Error> {
         let uuid = Uuid::from(&id);
         let result = sqlx::query!("SELECT * FROM users WHERE id = $1", uuid)
             .fetch_one(&self.database)
             .await?;
 
         Ok(Some(User {
-            id: UserId::from(result.id),
+            id: Id::from(result.id),
             email: Email::from_trusted_str(&result.email),
             hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
         }))
     }
 
-    pub async fn get_by_email(&self, email: Email) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_by_email(&self, email: &Email) -> Result<Option<User>, sqlx::Error> {
         let result = sqlx::query!("SELECT * FROM users WHERE email = $1", email.as_str())
             .fetch_optional(&self.database)
             .await?;
 
         match result {
             Some(result) => Ok(Some(User {
-                id: UserId::from(result.id),
+                id: Id::from(result.id),
                 email: Email::from_trusted_str(&result.email),
                 hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
             })),
@@ -56,7 +69,7 @@ impl UserRepository {
         }
     }
 
-    pub async fn delete(&self, id: &UserId) -> Result<u64, sqlx::Error> {
+    pub async fn delete(&self, id: &Id) -> Result<u64, sqlx::Error> {
         let uuid: uuid::Uuid = Uuid::from(id);
 
         let result = sqlx::query!("DELETE FROM users WHERE id = $1", uuid)
@@ -78,7 +91,7 @@ impl UserRepository {
         .await?;
 
         Ok(User {
-            id: UserId::from(result.id),
+            id: Id::from(result.id),
             email: Email::from_trusted_str(&result.email),
             hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
         })
@@ -102,7 +115,7 @@ impl UserRepository {
         .await?;
 
         Ok(User {
-            id: UserId::from(result.id),
+            id: Id::from(result.id),
             email: Email::from_trusted_str(&result.email),
             hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
         })

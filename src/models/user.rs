@@ -1,4 +1,3 @@
-#![allow(unused)]
 use std::fmt::Display;
 
 use secrecy::ExposeSecret;
@@ -16,9 +15,9 @@ pub struct Password(secrecy::Secret<String>);
 pub struct HashedPassword(String);
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
-pub struct UserId(uuid::Uuid);
+pub struct Id(uuid::Uuid);
 
-impl UserId {
+impl Id {
     pub fn new() -> Self {
         Self(uuid::Uuid::new_v4())
     }
@@ -27,20 +26,20 @@ impl UserId {
     }
 }
 
-impl Display for UserId {
+impl Display for Id {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl From<Uuid> for UserId {
+impl From<Uuid> for Id {
     fn from(value: Uuid) -> Self {
         Self(value)
     }
 }
 
-impl From<&UserId> for Uuid {
-    fn from(value: &UserId) -> Self {
+impl From<&Id> for Uuid {
+    fn from(value: &Id) -> Self {
         value.0
     }
 }
@@ -60,7 +59,11 @@ impl Email {
         self.0.as_str()
     }
 }
-
+impl Display for Email {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 impl Password {
     pub fn parse(password: &str) -> Result<Self, &str> {
         use validator::*;
@@ -75,7 +78,7 @@ impl Password {
         use bcrypt::Version;
         let hash_result = bcrypt::hash_with_salt::<&str>(self.as_str(), 6, rand::random()).unwrap();
         let hashed_password = hash_result.format_for_version(Version::TwoB);
-        let salt = hash_result.get_salt();
+        // let salt = hash_result.get_salt();
         drop(hash_result);
         HashedPassword::from_trusted_str(&hashed_password)
     }
@@ -126,7 +129,7 @@ impl NewUser {
 pub struct User {
     pub email: Email,
     pub hashed_password: HashedPassword,
-    pub id: UserId,
+    pub id: Id,
 }
 
 #[cfg(test)]

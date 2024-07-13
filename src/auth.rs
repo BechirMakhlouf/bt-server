@@ -1,61 +1,89 @@
-use jsonwebtoken::{Algorithm, Header, TokenData};
-use serde::{Deserialize, Serialize};
+// use std::error::Error;
+#![allow(dead_code)]
+use chrono::Days;
+use sqlx::{Pool, Postgres};
 
-use crate::models::session::{Session, SessionId};
+use crate::{
+    models::{
+        session::{self, Session, SessionFactory},
+        user::{self, Email, NewUser},
+    },
+    repositories::UserRepository,
+};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct SessionTokenClaims {
-    iat: usize,
-    exp: usize,
-    aud: String,
-    session_id: SessionId,
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("There is no user with email `{0}`.")]
+    EmailNotFound(Email),
+    #[error("There is no user with the provided credentials.")]
+    WrongCredentials,
+
+    #[error("Email: `{0}` already used.")]
+    UsedEmail(Email),
+
+    #[error("Unknown auth error.")]
+    Unknown,
 }
 
-pub fn create_token(session: Session) -> Result<String, jsonwebtoken::errors::Error> {
-    let session_token_claims = SessionTokenClaims {
-        session_id: session.id.clone(),
-        iat: chrono::Local::now().timestamp().try_into().unwrap(),
-        exp: session.exp.timestamp().try_into().unwrap(),
-        aud: "users".into(),
-    };
-
-    let header: Header = Header::new(Algorithm::HS384);
-    let secret_key = b"my_secret_key";
-    let encoded_token = jsonwebtoken::encode(
-        &header,
-        &session_token_claims,
-        &jsonwebtoken::EncodingKey::from_secret(secret_key),
-    );
-
-    encoded_token
+#[derive(Debug)]
+pub struct Authenticator {
+    user_repo: UserRepository,
+    session_factory: SessionFactory,
 }
 
-fn parse_jwt(value: &str) -> Result<TokenData<SessionTokenClaims>, jsonwebtoken::errors::Error> {
-    let mut validator = jsonwebtoken::Validation::new(Algorithm::HS384);
-    validator.set_audience(&["users"]);
+impl Authenticator {
+    pub fn new(db_pool: Pool<Postgres>, jwt_secret: secrecy::Secret<String>) -> Self {
+        Self {
+            user_repo: UserRepository::new(db_pool),
+            session_factory: SessionFactory::new(jwt_secret, "users".into(), Days::new(5)),
+        }
+    }
 
-    jsonwebtoken::decode::<SessionTokenClaims>(
-        value,
-        &jsonwebtoken::DecodingKey::from_secret(b"my_secret_key"),
-        &validator,
-    )
-}
+    pub async fn auth_user_email_password(
+        &self,
+        email: user::Email,
+        password: user::Password,
+    ) -> Result<session::Session, Error> {
+        let user = self.user_repo.get_by_email(&email).await;
 
-#[cfg(test)]
-mod tests {
+        if let Err(_) = user {
+            return Err(Error::Unknown);
+        }
+        let user = user.unwrap();
 
-    use chrono::Days;
+        if user.is_none() {
+            return Err(Error::WrongCredentials);
+        }
+        let user = user.unwrap();
+        if user.hashed_password.compare_with(&password) {
+            Ok(session::Session::new(user.id, Days::new(5)))
+        } else {
+            Err(Error::WrongCredentials)
+        }
+    }
 
-    use crate::auth::{create_token, parse_jwt};
-    use crate::models::session::Session;
-    use crate::models::user::UserId;
+    pub async fn sign_up_user(&self, new_user: NewUser) -> Result<user::Id, Error> {
+        let add_user_result = self.user_repo.add(&new_user).await;
 
-    #[test]
-    fn try_tokenizing_sessions() {
-        let session = Session::new(UserId::new(), Days::new(10));
-        let jwt_str = create_token(session.clone()).expect("should return jwt string");
-        let token = parse_jwt(&jwt_str).expect("should return session");
+        if let Ok(user_id) = add_user_result {
+            return Ok(user_id);
+        }
+        let error = add_user_result.unwrap_err();
 
-        assert_eq!(token.claims.session_id, session.id);
+        if let sqlx::Error::Database(err) = error {
+            match err.kind() {
+                sqlx::error::ErrorKind::UniqueViolation => {
+                    return Err(Error::UsedEmail(new_user.email))
+                }
+                _ => return Err(Error::Unknown),
+            }
+        }
+        Err(Error::Unknown)
+    }
+
+    //TODO: check if session is already expired
+    pub fn create_session_token(&self, session: Session) -> Result<String, String> {
+        // Ok(self.token_factory.create_session_jwt(session));
+        Ok(self.session_factory.create_session_jwt(session).unwrap())
     }
 }

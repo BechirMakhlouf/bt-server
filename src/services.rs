@@ -1,6 +1,6 @@
-#![allow(unused)]
 mod test_service;
 mod user_service;
+
 pub mod proto {
     tonic::include_proto!("test");
     tonic::include_proto!("user");
@@ -33,6 +33,9 @@ pub fn create_test_service() -> TestServer<TestService> {
     TestServer::new(TestService::default())
 }
 
-pub fn create_user_service(db_pool: Pool<Postgres>) -> UserServer<UserService> {
-    UserServer::new(UserService::new(db_pool))
+pub fn create_user_service(
+    db_pool: Pool<Postgres>,
+    jwt_secret: secrecy::Secret<String>,
+) -> UserServer<UserService> {
+    UserServer::new(UserService::new(db_pool, jwt_secret))
 }

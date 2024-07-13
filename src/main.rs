@@ -8,10 +8,9 @@ mod configuration;
 mod models;
 mod repositories;
 mod services;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _ = dotenvy::dotenv().unwrap();
-
     let addr = TcpListener::bind("[::1]:50051")
         .unwrap()
         .local_addr()
@@ -29,7 +28,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         .add_service(services::create_reflection_service())
-        .add_service(services::create_user_service(db_pool.clone()))
+        .add_service(services::create_health_service())
+        .add_service(services::create_user_service(
+            db_pool.clone(),
+            application_settings.jwt_secret,
+        ))
         .add_service(services::create_test_service())
         .serve(addr)
         .await?;
