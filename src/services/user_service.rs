@@ -41,7 +41,6 @@ impl User for UserService {
 
         if let Ok(session) = auth_user_result {
             return Ok(Response::new(AuthUserResponse {
-                //TODO: fix when this errors out
                 session_token: self.auth.create_session_token(session).unwrap(),
             }));
         }

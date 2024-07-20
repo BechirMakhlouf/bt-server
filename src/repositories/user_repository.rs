@@ -3,19 +3,6 @@
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-// trait UserRepositoryInterface {
-//     async fn add(&self, new_user: &NewUser) -> Self;
-//     async fn get_by_id(&self, id: Id) -> Result<Option<User>, sqlx::Error>;
-//     async fn get_by_email(&self, id: Id) -> Result<Option<User>, sqlx::Error>;
-//     async fn delete(&self, id: &Id) -> Result<u64, sqlx::Error>;
-//     async fn update(&self, user: User) -> Result<User, sqlx::Error>;
-//     async fn update_password(
-//         &self,
-//         user: User,
-//         new_password: &Password,
-//     ) -> Result<User, sqlx::Error>;
-// }
-
 #[derive(Debug)]
 pub struct UserRepository {
     database: Pool<Postgres>,

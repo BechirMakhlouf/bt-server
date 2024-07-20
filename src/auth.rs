@@ -81,9 +81,11 @@ impl Authenticator {
         Err(Error::Unknown)
     }
 
-    //TODO: check if session is already expired
-    pub fn create_session_token(&self, session: Session) -> Result<String, String> {
-        // Ok(self.token_factory.create_session_jwt(session));
+    pub fn create_session_token(&self, session: Session) -> Result<String, session::Error> {
+        if session.is_expired() {
+            return Err(session::Error::ExpiredSession(session));
+        }
+
         Ok(self.session_factory.create_session_jwt(session).unwrap())
     }
 }

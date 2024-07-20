@@ -10,6 +10,12 @@ use uuid::Uuid;
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
 pub struct SessionId(Uuid);
 
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Session is expired")]
+    ExpiredSession(Session),
+}
+
 impl SessionId {
     pub fn new() -> Self {
         Self(uuid::Uuid::new_v4())
@@ -55,6 +61,9 @@ impl Session {
                 .unwrap(),
         }
     }
+    pub fn is_expired(&self) -> bool {
+        return self.exp.timestamp() <= chrono::Local::now().timestamp();
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -86,13 +95,13 @@ impl SessionFactory {
         Session::new(user_id, self.exp_days)
     }
 
-    //TODO: create a customized error when the session passed is already expired.
-    pub fn create_session_jwt(
-        &self,
-        session: Session,
-    ) -> Result<String, jsonwebtoken::errors::Error> {
+    pub fn create_session_jwt(&self, session: Session) -> Result<String, Error> {
         use jsonwebtoken::Algorithm;
         use jsonwebtoken::Header;
+
+        if session.is_expired() {
+            return Err(Error::ExpiredSession(session));
+        }
 
         let session_token_claims = SessionTokenClaims {
             session_id: session.id.clone(),

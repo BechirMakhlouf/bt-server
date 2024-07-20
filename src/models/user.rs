@@ -126,6 +126,7 @@ impl NewUser {
     }
 }
 
+#[derive(Debug)]
 pub struct User {
     pub email: Email,
     pub hashed_password: HashedPassword,

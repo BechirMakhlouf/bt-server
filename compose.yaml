@@ -1,13 +1,14 @@
 services:
-  # server:
-  #   build: .
-  #   container_name: server
-  #   ports:
-  #     - 8080:8080
-  redis:
-    image: redis:latest
+  server:
+    build: .
+    container_name: server
     ports:
-      - 6379:6379
+      - 8080:8080
+  # redis:
+  #   image: redis:latest
+  #   ports:
+  #     - 6379:6379
+  #
   # nginx:
   #   image: nginx:latest
   #   volumes:
