@@ -21,6 +21,7 @@ impl Id {
     pub fn new() -> Self {
         Self(uuid::Uuid::new_v4())
     }
+
     pub fn get_value(&self) -> &Uuid {
         &self.0
     }
@@ -38,6 +39,11 @@ impl From<Uuid> for Id {
     }
 }
 
+impl From<Id> for Uuid {
+    fn from(value: Id) -> Self {
+        value.0
+    }
+}
 impl From<&Id> for Uuid {
     fn from(value: &Id) -> Self {
         value.0
@@ -59,11 +65,13 @@ impl Email {
         self.0.as_str()
     }
 }
+
 impl Display for Email {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
+
 impl Password {
     pub fn parse(password: &str) -> Result<Self, &str> {
         use validator::*;
