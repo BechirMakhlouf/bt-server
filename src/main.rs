@@ -8,6 +8,7 @@ mod configuration;
 mod models;
 mod repositories;
 mod services;
+mod types;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
