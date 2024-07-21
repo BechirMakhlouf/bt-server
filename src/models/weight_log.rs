@@ -1,4 +1,4 @@
-use std::{f64, fmt::Display};
+use std::f64;
 
 use ::chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ pub enum Error {
     InvalidWeightDate(chrono::NaiveDate),
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct WeightKg(f64);
 
 impl TryFrom<f64> for WeightKg {
@@ -34,7 +34,7 @@ impl From<WeightKg> for f64 {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct WeightDate(chrono::NaiveDate);
 
 impl WeightDate {
@@ -81,5 +81,27 @@ impl WeightLog {
             weight_kg: weight_kg.try_into()?,
             date: date_at.try_into()?,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::WeightKg;
+
+    #[test]
+    fn test_weight_kg_equality_ord() {
+        assert_eq!(
+            WeightKg::try_from(20.0).unwrap(),
+            WeightKg::try_from(20.0).unwrap(),
+            "Values should be equal."
+        );
+
+        assert_ne!(
+            WeightKg::try_from(20.0).unwrap(),
+            WeightKg::try_from(20.1).unwrap(),
+            "Values should not be equal."
+        );
+
+        assert!(WeightKg::try_from(20.0).unwrap() < WeightKg::try_from(22.0).unwrap())
     }
 }
