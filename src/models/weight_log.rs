@@ -51,6 +51,7 @@ impl WeightDate {
 
 impl TryFrom<NaiveDate> for WeightDate {
     type Error = Error;
+
     fn try_from(value: chrono::NaiveDate) -> Result<Self, Self::Error> {
         if value > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidWeightDate(value));
