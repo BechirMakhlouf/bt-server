@@ -23,5 +23,3 @@ impl From<PositiveNonZeroF64> for f64 {
         value.0
     }
 }
-
-impl Option<PositiveNonZeroF64> {}

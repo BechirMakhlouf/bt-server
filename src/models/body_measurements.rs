@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
-use crate::types::negative_non_zero_float::PositiveNonZeroF64;
 use crate::types::past_naive_date::PastNaiveDate;
+use crate::types::positive_non_zero_float::PositiveNonZeroF64;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

@@ -25,6 +25,7 @@ impl UserRepository {
         .fetch_one(&self.database)
         .await?;
 
+        
         Ok(query_result.id.into())
     }
 
