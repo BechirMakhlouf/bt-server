@@ -15,6 +15,8 @@ pub enum Error {
     InvalidWeightDate(chrono::NaiveDate),
 }
 
+//TODO: weightDate interval struct
+
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct WeightKg(f64);
 
