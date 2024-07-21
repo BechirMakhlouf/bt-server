@@ -25,17 +25,16 @@ impl UserRepository {
         .fetch_one(&self.database)
         .await?;
 
-        Ok(Id::from(query_result.id))
+        Ok(query_result.id.into())
     }
 
     pub async fn get_by_id(&self, id: Id) -> Result<Option<User>, sqlx::Error> {
-        let uuid = Uuid::from(&id);
-        let result = sqlx::query!("SELECT * FROM users WHERE id = $1", uuid)
+        let result = sqlx::query!("SELECT * FROM users WHERE id = $1", uuid::Uuid::from(id))
             .fetch_one(&self.database)
             .await?;
 
         Ok(Some(User {
-            id: Id::from(result.id),
+            id: result.id.into(),
             email: Email::from_trusted_str(&result.email),
             hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
         }))
@@ -48,7 +47,7 @@ impl UserRepository {
 
         match result {
             Some(result) => Ok(Some(User {
-                id: Id::from(result.id),
+                id: result.id.into(),
                 email: Email::from_trusted_str(&result.email),
                 hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
             })),
@@ -57,9 +56,7 @@ impl UserRepository {
     }
 
     pub async fn delete(&self, id: &Id) -> Result<u64, sqlx::Error> {
-        let uuid: uuid::Uuid = Uuid::from(id);
-
-        let result = sqlx::query!("DELETE FROM users WHERE id = $1", uuid)
+        let result = sqlx::query!("DELETE FROM users WHERE id = $1", uuid::Uuid::from(id))
             .execute(&self.database)
             .await?;
 
@@ -78,7 +75,7 @@ impl UserRepository {
         .await?;
 
         Ok(User {
-            id: Id::from(result.id),
+            id: result.id.into(),
             email: Email::from_trusted_str(&result.email),
             hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
         })
@@ -102,7 +99,7 @@ impl UserRepository {
         .await?;
 
         Ok(User {
-            id: Id::from(result.id),
+            id: result.id.into(),
             email: Email::from_trusted_str(&result.email),
             hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
         })

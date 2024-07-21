@@ -2,6 +2,7 @@ use configuration::ApplicationSettings;
 use sqlx::Postgres;
 use std::net::TcpListener;
 use tonic::transport::Server;
+
 mod auth;
 mod configuration;
 mod models;
