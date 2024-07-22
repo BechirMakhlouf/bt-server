@@ -26,3 +26,9 @@ impl From<PastNaiveDate> for NaiveDate {
         value.0
     }
 }
+
+impl From<&PastNaiveDate> for NaiveDate {
+    fn from(value: &PastNaiveDate) -> Self {
+        value.0
+    }
+}
