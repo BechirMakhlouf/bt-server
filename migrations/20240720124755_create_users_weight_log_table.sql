@@ -6,3 +6,5 @@ create table users_weight_log (
   PRIMARY KEY (user_id, date_at),
   CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
+CREATE INDEX idx_users_weight_log_date_user_id ON users_weight_log (user_id, date_at)
