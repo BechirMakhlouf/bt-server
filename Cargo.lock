@@ -1569,6 +1569,7 @@ dependencies = [
  "prost",
  "rand",
  "redis",
+ "regex",
  "secrecy",
  "serde",
  "serde-aux",
