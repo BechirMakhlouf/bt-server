@@ -14,7 +14,18 @@ pub struct Password(secrecy::Secret<String>);
 #[derive(Debug, Deserialize)]
 pub struct HashedPassword(String);
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    Default,
+    Clone,
+    PartialEq,
+    // sqlx::Type,
+    sqlx::encode::Encode,
+    sqlx::decode::Decode,
+)]
+#[sqlx(transparent)]
 pub struct Id(uuid::Uuid);
 
 impl Id {
