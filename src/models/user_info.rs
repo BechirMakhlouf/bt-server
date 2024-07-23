@@ -4,7 +4,7 @@ use validator::ValidateRegex;
 
 use super::user;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Clone)]
 pub enum Error {
     #[error("Invalid birthday date: {0}")]
     InvalidBirthdayDate(chrono::NaiveDate),

@@ -33,9 +33,7 @@ impl UserInfoRepository {
         sqlx::query!(
             "UPDATE users_info
              SET
-                 username = $1,
-                 gender = $2,
-                 birthday = $3
+                 username = $1, gender = $2, birthday = $3
             WHERE
                 user_id = $4",
             String::from(user_info.username),
