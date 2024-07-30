@@ -1,4 +1,4 @@
-use std::f64;
+use std::f32;
 
 use ::chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -9,7 +9,7 @@ use super::user;
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Weight is invalid: {0}")]
-    InvalidWeight(f64),
+    InvalidWeight(f32),
 
     #[error("Invalid date for weight: {0}")]
     InvalidWeightDate(chrono::NaiveDate),
@@ -18,11 +18,11 @@ pub enum Error {
 //TODO: weightDate interval struct
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
-pub struct WeightKg(f64);
+pub struct WeightKg(f32);
 
-impl TryFrom<f64> for WeightKg {
+impl TryFrom<f32> for WeightKg {
     type Error = Error;
-    fn try_from(value: f64) -> Result<Self, Self::Error> {
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
         match value {
             5.0..=1000.0 => Ok(Self(value)),
             _ => Err(Error::InvalidWeight(value)),
@@ -30,7 +30,7 @@ impl TryFrom<f64> for WeightKg {
     }
 }
 
-impl From<WeightKg> for f64 {
+impl From<WeightKg> for f32 {
     fn from(value: WeightKg) -> Self {
         value.0
     }
@@ -76,7 +76,7 @@ pub struct WeightLog {
 impl WeightLog {
     pub fn new(
         user_id: user::Id,
-        weight_kg: f64,
+        weight_kg: f32,
         date_at: chrono::NaiveDate,
     ) -> Result<Self, Error> {
         Ok(Self {
