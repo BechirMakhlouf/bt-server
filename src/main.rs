@@ -1,7 +1,10 @@
 use configuration::ApplicationSettings;
+use repositories::{
+    BodyMeasurementsRepository, Repository, UserInfoRepository, UserRepository,
+    UserWeightLogRepository,
+};
 use sqlx::Postgres;
 use std::net::TcpListener;
-use tonic::transport::Server;
 
 mod auth;
 mod configuration;
@@ -27,16 +30,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .unwrap();
 
-    Server::builder()
-        .add_service(services::create_reflection_service())
-        .add_service(services::create_health_service())
-        .add_service(services::create_user_service(
-            db_pool.clone(),
-            application_settings.jwt_secret,
-        ))
-        .add_service(services::create_test_service())
-        .serve(addr)
-        .await?;
+    let body_measurements_repository = BodyMeasurementsRepository::new(&db_pool);
+    let user_repository = UserRepository::new(&db_pool);
+    let user_info_repository = UserInfoRepository::new(&db_pool);
+    let user_weight_log_repository = UserWeightLogRepository::new(&db_pool);
+
+    let _repo = Repository::new(
+        body_measurements_repository,
+        user_info_repository,
+        user_weight_log_repository,
+        user_repository,
+    );
+
+    // Server::builder()
+    //     .add_service(services::create_reflection_service())
+    //     .add_service(services::create_health_service())
+    //     .add_service(services::create_user_service(
+    //         db_pool.clone(),
+    //         application_settings.jwt_secret,
+    //     ))
+    //     .add_service(services::create_test_service())
+    //     .serve(addr)
+    //     .await?;
 
     Ok(())
 }

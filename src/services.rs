@@ -15,7 +15,7 @@ pub use test_service::TestService;
 
 use tonic_health::pb::health_server::{Health, HealthServer};
 use tonic_reflection::server::{ServerReflection, ServerReflectionServer};
-use user_service::UserService;
+// use user_service::UserService;
 
 pub fn create_health_service() -> HealthServer<impl Health> {
     let (_, health_service) = tonic_health::server::health_reporter();
@@ -33,9 +33,9 @@ pub fn create_test_service() -> TestServer<TestService> {
     TestServer::new(TestService::default())
 }
 
-pub fn create_user_service(
-    db_pool: Pool<Postgres>,
-    jwt_secret: secrecy::Secret<String>,
-) -> UserServer<UserService> {
-    UserServer::new(UserService::new(db_pool, jwt_secret))
-}
+// pub fn create_user_service(
+//     db_pool: Pool<Postgres>,
+//     jwt_secret: secrecy::Secret<String>,
+// ) -> UserServer<UserService> {
+//     UserServer::new(UserService::new(db_pool, jwt_secret))
+// }

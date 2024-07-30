@@ -1,5 +1,4 @@
-// use std::error::Error;
-#![allow(dead_code)]
+/*
 use chrono::Days;
 use sqlx::{Pool, Postgres};
 
@@ -13,8 +12,8 @@ use crate::{
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("There is no user with email `{0}`.")]
-    EmailNotFound(Email),
+    // #[error("There is no user with email `{0}`.")]
+    // EmailNotFound(Email),
     #[error("There is no user with the provided credentials.")]
     WrongCredentials,
 
@@ -89,3 +88,4 @@ impl Authenticator {
         Ok(self.session_factory.create_session_jwt(session).unwrap())
     }
 }
+*/
