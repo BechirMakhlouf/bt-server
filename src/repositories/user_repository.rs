@@ -4,61 +4,64 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 #[derive(Debug)]
-pub struct UserRepository {
-    database: Pool<Postgres>,
+pub struct UserRepository<'a> {
+    database: &'a Pool<Postgres>,
 }
 
-use crate::models::user::{Email, HashedPassword, Id, NewUser, Password, User};
+use crate::models::user::{Email, EncryptedPassword, Id, NewUser, Password, User};
 
-impl UserRepository {
-    pub fn new(db_pool: Pool<Postgres>) -> Self {
+impl<'a> UserRepository<'a> {
+    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
         Self { database: db_pool }
     }
+
     pub async fn add(&self, new_user: &NewUser) -> Result<Id, sqlx::Error> {
-        let hashed_password = new_user.password.hash_with_salt();
+        let encrypted_password = new_user.password.hash_with_salt();
 
         let query_result = sqlx::query!(
-            "INSERT INTO users (email, hashed_password) VALUES ($1, $2) RETURNING id",
+            "INSERT INTO auth.users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
             &new_user.email.as_str(),
-            hashed_password.to_string(),
+            encrypted_password.to_string(),
         )
-        .fetch_one(&self.database)
+        .fetch_one(self.database)
         .await?;
 
-        
         Ok(query_result.id.into())
     }
 
     pub async fn get_by_id(&self, id: Id) -> Result<Option<User>, sqlx::Error> {
-        let result = sqlx::query!("SELECT * FROM users WHERE id = $1", uuid::Uuid::from(id))
-            .fetch_one(&self.database)
-            .await?;
+        let result = sqlx::query!(
+            "SELECT * FROM auth.users WHERE id = $1",
+            uuid::Uuid::from(id)
+        )
+        .fetch_one(self.database)
+        .await?;
 
         Ok(Some(User {
             id: result.id.into(),
             email: Email::from_trusted_str(&result.email),
-            hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
+            encrypted_password: EncryptedPassword::from_trusted_str(&result.encrypted_password),
         }))
     }
 
     pub async fn get_by_email(&self, email: &Email) -> Result<Option<User>, sqlx::Error> {
-        let result = sqlx::query!("SELECT * FROM users WHERE email = $1", email.as_str())
-            .fetch_optional(&self.database)
+        let result = sqlx::query!("SELECT * FROM auth.users WHERE email = $1", email.as_str())
+            .fetch_optional(self.database)
             .await?;
 
         match result {
             Some(result) => Ok(Some(User {
                 id: result.id.into(),
                 email: Email::from_trusted_str(&result.email),
-                hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
+                encrypted_password: EncryptedPassword::from_trusted_str(&result.encrypted_password),
             })),
             None => Ok(None),
         }
     }
 
     pub async fn delete(&self, id: &Id) -> Result<u64, sqlx::Error> {
-        let result = sqlx::query!("DELETE FROM users WHERE id = $1", uuid::Uuid::from(id))
-            .execute(&self.database)
+        let result = sqlx::query!("DELETE FROM auth.users WHERE id = $1", uuid::Uuid::from(id))
+            .execute(self.database)
             .await?;
 
         Ok(result.rows_affected())
@@ -68,17 +71,17 @@ impl UserRepository {
         let uuid = Uuid::from(&user.id);
 
         let result = sqlx::query!(
-            "UPDATE users SET email = $1 WHERE id = $2 RETURNING *",
+            "UPDATE auth.users SET email = $1 WHERE id = $2 RETURNING *",
             user.email.as_str(),
             uuid,
         )
-        .fetch_one(&self.database)
+        .fetch_one(self.database)
         .await?;
 
         Ok(User {
             id: result.id.into(),
             email: Email::from_trusted_str(&result.email),
-            hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
+            encrypted_password: EncryptedPassword::from_trusted_str(&result.encrypted_password),
         })
     }
 
@@ -89,20 +92,20 @@ impl UserRepository {
     ) -> Result<User, sqlx::Error> {
         let uuid = Uuid::from(&user.id);
 
-        let hashed_password = new_password.hash_with_salt();
+        let encrypted_password = new_password.hash_with_salt();
 
         let result = sqlx::query!(
-            "UPDATE users SET hashed_password = $1 WHERE id = $2 returning *",
-            hashed_password.to_string(),
+            "UPDATE auth.users SET encrypted_password = $1 WHERE id = $2 returning *",
+            encrypted_password.to_string(),
             uuid,
         )
-        .fetch_one(&self.database)
+        .fetch_one(self.database)
         .await?;
 
         Ok(User {
             id: result.id.into(),
             email: Email::from_trusted_str(&result.email),
-            hashed_password: HashedPassword::from_trusted_str(&result.hashed_password),
+            encrypted_password: EncryptedPassword::from_trusted_str(&result.encrypted_password),
         })
     }
 }

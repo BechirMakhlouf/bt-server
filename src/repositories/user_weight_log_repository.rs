@@ -8,12 +8,12 @@ use crate::models::{
 };
 
 #[derive(Debug)]
-pub struct UserWeightLogRepository {
-    database: Pool<Postgres>,
+pub struct UserWeightLogRepository<'a> {
+    database: &'a Pool<Postgres>,
 }
 
-impl UserWeightLogRepository {
-    pub fn new(db_pool: Pool<Postgres>) -> Self {
+impl<'a> UserWeightLogRepository<'a> {
+    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
         Self { database: db_pool }
     }
 
@@ -28,10 +28,10 @@ impl UserWeightLogRepository {
                 date_at = EXCLUDED.date_at;
             ",
             weight_log.user_id.get_value(),
-            f64::from(weight_log.weight_kg),
+            f32::from(weight_log.weight_kg),
             NaiveDate::from(weight_log.date),
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
 
         Ok(())
@@ -47,7 +47,7 @@ impl UserWeightLogRepository {
             "SELECT * FROM users_weight_log WHERE user_id = $1",
             user_id.get_value()
         )
-        .fetch_all(&self.database)
+        .fetch_all(self.database)
         .await?
         .iter()
         .map(|weight_log_row| {
@@ -75,7 +75,7 @@ impl UserWeightLogRepository {
             NaiveDate::from(start_date),
             NaiveDate::from(end_date)
         )
-        .fetch_all(&self.database)
+        .fetch_all(self.database)
         .await?
         .iter()
         .map(|weight_log_row| {
@@ -95,7 +95,7 @@ impl UserWeightLogRepository {
             NaiveDate::from(weight_log.date),
             uuid::Uuid::from(weight_log.user_id)
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
 
         Ok(())

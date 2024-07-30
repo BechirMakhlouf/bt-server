@@ -7,12 +7,12 @@ use crate::models::{
 use chrono::NaiveDate;
 use uuid::Uuid;
 
-pub struct UserInfoRepository {
-    database: Pool<Postgres>,
+pub struct UserInfoRepository<'a> {
+    database: &'a Pool<Postgres>,
 }
 
-impl UserInfoRepository {
-    pub fn new(db_pool: Pool<Postgres>) -> Self {
+impl<'a> UserInfoRepository<'a> {
+    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
         Self { database: db_pool }
     }
 
@@ -24,7 +24,7 @@ impl UserInfoRepository {
             user_info.gender as Gender,
             NaiveDate::from(user_info.birthday),
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
 
         Ok(())
@@ -41,7 +41,7 @@ impl UserInfoRepository {
             NaiveDate::from(user_info.birthday),
             Uuid::from(user_info.user_id)
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
         Ok(())
     }
@@ -52,7 +52,7 @@ impl UserInfoRepository {
             FROM users_info WHERE user_id = $1",
             Uuid::from(user_id)
         )
-        .fetch_one(&self.database)
+        .fetch_one(self.database)
         .await?;
 
         Ok(user_info::UserInfo::new(
@@ -68,7 +68,7 @@ impl UserInfoRepository {
             "DELETE FROM users_info WHERE user_id = $1",
             Uuid::from(user_id)
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
 
         Ok(())
@@ -101,7 +101,7 @@ mod tests {
             .unwrap();
 
         let user_repo = UserRepository::new(db_pool.clone());
-        let user_info_repo = UserInfoRepository::new(db_pool);
+        let user_info_repo = UserInfoRepository::new(&db_pool);
 
         let new_user = user::NewUser::new("emaile@gmail.com", "dlskfjsdlkfjd").unwrap();
         let user_id = user_repo.add(&new_user).await.unwrap();

@@ -11,11 +11,14 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct BodyMeasurementsRepository {
-    database: Pool<Postgres>,
+pub struct BodyMeasurementsRepository<'a> {
+    database: &'a Pool<Postgres>,
 }
 
-impl BodyMeasurementsRepository {
+impl<'a> BodyMeasurementsRepository<'a> {
+    pub fn new(database: &'a Pool<Postgres>) -> Self {
+        Self { database }
+    }
     pub async fn add(&self, body_measurement: BodyMeasurementsCm) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "INSERT INTO users_body_measurements_cm 
@@ -36,7 +39,7 @@ impl BodyMeasurementsRepository {
             to_optional_f32(body_measurement.hips),
             to_optional_f32(body_measurement.torso),
             to_optional_f32(body_measurement.waist)
-        ).execute(&self.database).await?;
+        ).execute(self.database).await?;
         Ok(())
     }
 
@@ -77,7 +80,7 @@ impl BodyMeasurementsRepository {
             Uuid::from(body_measurement.user_id),
             NaiveDate::from(body_measurement.date_at)
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
 
         Ok(())
@@ -92,7 +95,7 @@ impl BodyMeasurementsRepository {
             Uuid::from(user_id),
             NaiveDate::from(date_at)
         )
-        .execute(&self.database)
+        .execute(self.database)
         .await?;
 
         Ok(())
@@ -108,7 +111,7 @@ impl BodyMeasurementsRepository {
             Uuid::from(&user_id),
             NaiveDate::from(&date_at)
         )
-        .fetch_one(&self.database)
+        .fetch_one(self.database)
         .await?;
 
         Ok(BodyMeasurementsCm::builder(user_id, date_at)
@@ -138,7 +141,7 @@ impl BodyMeasurementsRepository {
             Uuid::from(&user_id),
             NaiveDate::from(&date_at)
         )
-        .fetch_all(&self.database)
+        .fetch_all(self.database)
         .await?;
 
         Ok(records
