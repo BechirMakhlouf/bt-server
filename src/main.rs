@@ -1,4 +1,4 @@
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpServer};
 use configuration::ApplicationSettings;
 use env_logger::Env;
 use sqlx::Postgres;
@@ -7,12 +7,8 @@ use std::net::TcpListener;
 mod configuration;
 mod models;
 mod repositories;
+mod services;
 mod types;
-
-#[get("/health")]
-async fn health_check_service() -> impl Responder {
-    HttpResponse::Ok()
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -42,7 +38,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(tracing_actix_web::TracingLogger::default())
-            .service(health_check_service)
+            .service(services::health::check)
     })
     .bind(addr)?
     .run()
