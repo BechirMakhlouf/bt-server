@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
+pub mod body_fat;
 pub mod body_measurements;
-pub mod session;
 pub mod user;
 pub mod user_info;
 pub mod user_profile;
 pub mod user_settings;
-pub mod weight_log;
+pub mod user_weight;

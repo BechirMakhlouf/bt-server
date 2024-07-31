@@ -1,27 +1,21 @@
+use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use configuration::ApplicationSettings;
-use repositories::{
-    BodyMeasurementsRepository, Repository, UserInfoRepository, UserRepository,
-    UserWeightLogRepository,
-};
+use env_logger::Env;
 use sqlx::Postgres;
 use std::net::TcpListener;
 
-mod auth;
 mod configuration;
 mod models;
 mod repositories;
-mod services;
 mod types;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = TcpListener::bind("[::1]:50051")
-        .unwrap()
-        .local_addr()
-        .unwrap();
+#[get("/health")]
+async fn health_check_service() -> impl Responder {
+    HttpResponse::Ok()
+}
 
-    println!("port: {}", addr.port());
-
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
     let application_settings = ApplicationSettings::get_settings().unwrap();
 
     let db_pool = application_settings
@@ -30,28 +24,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .unwrap();
 
-    let body_measurements_repository = BodyMeasurementsRepository::new(&db_pool);
-    let user_repository = UserRepository::new(&db_pool);
-    let user_info_repository = UserInfoRepository::new(&db_pool);
-    let user_weight_log_repository = UserWeightLogRepository::new(&db_pool);
+    let _body_measurements_repository = repositories::BodyMeasurementsRepository::new(&db_pool);
+    let _user_repository = repositories::UserRepository::new(&db_pool);
+    let _user_info_repository = repositories::UserInfoRepository::new(&db_pool);
+    let _user_weight_log_repository = repositories::UserWeightRepository::new(&db_pool);
+    let _user_body_fat_repository = repositories::UserBodyFatRepository::new(&db_pool);
 
-    let _repo = Repository::new(
-        body_measurements_repository,
-        user_info_repository,
-        user_weight_log_repository,
-        user_repository,
-    );
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    // Server::builder()
-    //     .add_service(services::create_reflection_service())
-    //     .add_service(services::create_health_service())
-    //     .add_service(services::create_user_service(
-    //         db_pool.clone(),
-    //         application_settings.jwt_secret,
-    //     ))
-    //     .add_service(services::create_test_service())
-    //     .serve(addr)
-    //     .await?;
+    let addr = TcpListener::bind(format!("127.0.0.1:{}", application_settings.port))
+        .unwrap()
+        .local_addr()
+        .unwrap();
 
-    Ok(())
+    println!("port: {}", addr.port());
+
+    HttpServer::new(|| {
+        App::new()
+            .wrap(tracing_actix_web::TracingLogger::default())
+            .service(health_check_service)
+    })
+    .bind(addr)?
+    .run()
+    .await
 }
