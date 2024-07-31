@@ -25,10 +25,7 @@ impl From<PositiveNonZeroF64> for f64 {
 }
 
 pub fn to_some_f64(n: Option<PositiveNonZeroF64>) -> Option<f64> {
-    match n {
-        Some(n) => Some(n.into()),
-        None => None,
-    }
+    n.map(|n| n.into())
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -56,10 +53,7 @@ impl PositiveNonZeroF32 {
     }
 }
 pub fn to_optional_f32(n: Option<PositiveNonZeroF32>) -> Option<f32> {
-    match n {
-        Some(n) => Some(n.into()),
-        None => None,
-    }
+    n.map(|n| n.into())
 }
 
 pub fn to_opt_pos_f32(n: Option<f32>) -> Option<PositiveNonZeroF32> {
