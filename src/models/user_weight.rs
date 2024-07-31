@@ -67,13 +67,13 @@ impl From<WeightDate> for NaiveDate {
 }
 
 #[derive(Debug)]
-pub struct WeightLog {
+pub struct UserWeight {
     pub user_id: user::Id,
     pub weight_kg: WeightKg,
     pub date: WeightDate,
 }
 
-impl WeightLog {
+impl UserWeight {
     pub fn new(
         user_id: user::Id,
         weight_kg: f32,

@@ -5,7 +5,7 @@ use crate::types::positive_non_zero_float::PositiveNonZeroF32;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{user, weight_log::WeightKg};
+use super::{user, user_weight::WeightKg};
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
 pub struct Id(uuid::Uuid);
