@@ -3,10 +3,10 @@ create table users_body_fat (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
   date_at DATE NOT NULL CHECK (date_at <= CURRENT_DATE),
   user_id UUID NOT NULL,
-  body_fat REAL NOT NULL CHECK (body_fat between 5 and 1000),
+  body_fat REAL NOT NULL CHECK (body_fat between 0 and 100),
   created_at TIMESTAMP
   WITH
-    TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP
   WITH
     TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

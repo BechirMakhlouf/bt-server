@@ -1,9 +1,9 @@
 -- Add migration script here
-create table users_weight (
+CREATE TABLE users_progress_media (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
-  date_at DATE NOT NULL CHECK (date_at <= CURRENT_DATE),
   user_id UUID NOT NULL,
-  weight_kg REAL NOT NULL CHECK (weight_kg between 5 and 1000),
+  media_url TEXT NOT NULL,
+  date_at DATE NOT NULL CHECK (date_at <= CURRENT_DATE),
   created_at TIMESTAMP
   WITH
     TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -13,7 +13,7 @@ create table users_weight (
     CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES auth.users
 );
 
-CREATE INDEX idx_users_weight_date_user_id ON users_weight (user_id, date_at);
+CREATE INDEX idx_users_progress_media_date_user_id ON users_progress_media (user_id, date_at);
 
 CREATE TRIGGER handle_updated_at BEFORE
-UPDATE ON users_weight FOR EACH ROW EXECUTE FUNCTION moddatetime ();
+UPDATE ON users_progress_media FOR EACH ROW EXECUTE FUNCTION moddatetime ();

@@ -6,9 +6,13 @@ CREATE TABLE users_info (
   username VARCHAR(18) UNIQUE NOT NULL CHECK(username ~* '^[A-Za-z0-9_]+$'),
   gender GENDER NOT NULL DEFAULT 'unknown',
   birthday DATE NOT NULL CHECK (birthday <= CURRENT_DATE),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP  WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES auth.users
+  created_at TIMESTAMP
+  WITH
+    TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+  WITH
+    TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES auth.users
 );
 
 CREATE INDEX idx_users_info_user_id ON users_info (user_id);
