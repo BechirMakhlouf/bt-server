@@ -57,9 +57,9 @@ impl<'a> UserInfoRepository<'a> {
 
         Ok(user_info::UserInfo::new(
             query_result.user_id.into(),
-            query_result.username.try_into().unwrap(),
+            query_result.username,
             query_result.gender,
-            query_result.birthday.try_into().unwrap(),
+            query_result.birthday,
         )
         .unwrap())
     }
@@ -100,7 +100,7 @@ mod tests {
             .await
             .unwrap();
 
-        let user_repo = UserRepository::new(db_pool.clone());
+        let user_repo = UserRepository::new(&db_pool);
         let user_info_repo = UserInfoRepository::new(&db_pool);
 
         let new_user = user::NewUser::new("emaile@gmail.com", "dlskfjsdlkfjd").unwrap();
