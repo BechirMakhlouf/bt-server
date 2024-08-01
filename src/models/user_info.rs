@@ -33,6 +33,17 @@ impl From<Gender> for String {
     }
 }
 
+impl From<Gender> for &str {
+    fn from(gender: Gender) -> Self {
+        match gender {
+            Gender::Male => "male",
+            Gender::Female => "female",
+            Gender::Other => "other",
+            Gender::Unknown => "unknown",
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
 #[repr(transparent)]
 pub struct Username(String);

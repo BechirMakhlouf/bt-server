@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Email Type
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Email(String);
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Password(secrecy::Secret<String>);
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct EncryptedPassword(String);
 
 #[derive(
@@ -130,7 +130,7 @@ impl Display for EncryptedPassword {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct NewUser {
     pub email: Email,
     pub password: Password,
