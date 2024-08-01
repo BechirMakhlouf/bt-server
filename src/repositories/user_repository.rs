@@ -1,17 +1,19 @@
 // all crud operations for user
 
+use std::sync::Arc;
+
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-#[derive(Debug)]
-pub struct UserRepository<'a> {
-    database: &'a Pool<Postgres>,
+#[derive(Debug, Clone)]
+pub struct UserRepository {
+    database: Arc<Pool<Postgres>>,
 }
 
 use crate::models::user::{Email, EncryptedPassword, Id, NewUser, Password, User};
 
-impl<'a> UserRepository<'a> {
-    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
+impl UserRepository {
+    pub fn new(db_pool: Arc<Pool<Postgres>>) -> Self {
         Self { database: db_pool }
     }
 
@@ -23,7 +25,7 @@ impl<'a> UserRepository<'a> {
             &new_user.email.as_str(),
             encrypted_password.to_string(),
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(query_result.id.into())
@@ -34,7 +36,7 @@ impl<'a> UserRepository<'a> {
             "SELECT * FROM auth.users WHERE id = $1",
             uuid::Uuid::from(id)
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(Some(User {
@@ -46,7 +48,7 @@ impl<'a> UserRepository<'a> {
 
     pub async fn get_by_email(&self, email: &Email) -> Result<Option<User>, sqlx::Error> {
         let result = sqlx::query!("SELECT * FROM auth.users WHERE email = $1", email.as_str())
-            .fetch_optional(self.database)
+            .fetch_optional(self.database.as_ref())
             .await?;
 
         match result {
@@ -61,7 +63,7 @@ impl<'a> UserRepository<'a> {
 
     pub async fn delete(&self, id: &Id) -> Result<u64, sqlx::Error> {
         let result = sqlx::query!("DELETE FROM auth.users WHERE id = $1", uuid::Uuid::from(id))
-            .execute(self.database)
+            .execute(self.database.as_ref())
             .await?;
 
         Ok(result.rows_affected())
@@ -75,7 +77,7 @@ impl<'a> UserRepository<'a> {
             user.email.as_str(),
             uuid,
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(User {
@@ -99,7 +101,7 @@ impl<'a> UserRepository<'a> {
             encrypted_password.to_string(),
             uuid,
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(User {

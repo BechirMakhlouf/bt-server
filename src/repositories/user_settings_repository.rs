@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use sqlx::{Pool, Postgres};
 
 use crate::models::{
@@ -7,13 +9,13 @@ use crate::models::{
 
 use uuid::Uuid;
 
-#[derive(Debug)]
-pub struct UserSettingsRepository<'a> {
-    database: &'a Pool<Postgres>,
+#[derive(Debug, Clone)]
+pub struct UserSettingsRepository {
+    database: Arc<Pool<Postgres>>,
 }
 
-impl<'a> UserSettingsRepository<'a> {
-    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
+impl UserSettingsRepository {
+    pub fn new(db_pool: Arc<Pool<Postgres>>) -> Self {
         Self { database: db_pool }
     }
 
@@ -24,7 +26,7 @@ impl<'a> UserSettingsRepository<'a> {
             user_settings.pref_theme as ThemeMode,
             user_settings.pref_unit as Unit
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -41,7 +43,7 @@ impl<'a> UserSettingsRepository<'a> {
             user_settings.pref_unit as Unit,
             Uuid::from(&user_settings.user_id)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
         Ok(())
     }
@@ -51,7 +53,7 @@ impl<'a> UserSettingsRepository<'a> {
             "SELECT pref_unit as \"pref_unit: Unit\", pref_theme as \"pref_theme: ThemeMode\" FROM users_settings where user_id = $1",
             Uuid::from(&user_id)
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(UsersSettings::new(
@@ -64,9 +66,9 @@ impl<'a> UserSettingsRepository<'a> {
     pub async fn delete(&self, user_settings: UsersSettings) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "DELETE FROM users_settings where user_id = $1",
-            Uuid::from(&user_settings.user_id)
+            Some(Uuid::from(&user_settings.user_id))
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
         Ok(())
     }

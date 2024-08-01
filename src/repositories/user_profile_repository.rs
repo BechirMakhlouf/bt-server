@@ -1,15 +1,18 @@
+use std::sync::Arc;
+
 use sqlx::{Pool, Postgres};
 
 use uuid::Uuid;
 
 use crate::models::{user, user_profile::UserProfile};
 
-pub struct UserProfileRepository<'a> {
-    database: &'a Pool<Postgres>,
+#[derive(Debug, Clone)]
+pub struct UserProfileRepository {
+    database: Arc<Pool<Postgres>>,
 }
 
-impl<'a> UserProfileRepository<'a> {
-    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
+impl UserProfileRepository {
+    pub fn new(db_pool: Arc<Pool<Postgres>>) -> Self {
         Self { database: db_pool }
     }
 
@@ -18,7 +21,7 @@ impl<'a> UserProfileRepository<'a> {
         Uuid::from(&user_profile.user_id),
         user_profile.url.as_str(),
         user_profile.picture_url.as_str(),
-        user_profile.description).execute(self.database).await?;
+        user_profile.description).execute(self.database.as_ref()).await?;
 
         Ok(())
     }
@@ -35,7 +38,7 @@ impl<'a> UserProfileRepository<'a> {
             user_profile.description,
             Uuid::from(user_profile.user_id)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -46,7 +49,7 @@ impl<'a> UserProfileRepository<'a> {
             "SELECT * FROM users_profiles where user_id = $1",
             Uuid::from(user_id)
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
         Ok(UserProfile::new(
             query_result.user_id.into(),
@@ -61,7 +64,7 @@ impl<'a> UserProfileRepository<'a> {
             "DELETE FROM users_profiles WHERE user_id = $1",
             Uuid::from(user_id)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::NaiveDate;
 use sqlx::{query, Pool, Postgres};
 
@@ -6,13 +8,13 @@ use crate::models::{
     user_weight::{self, UserWeight, WeightDate},
 };
 
-#[derive(Debug)]
-pub struct UserWeightRepository<'a> {
-    database: &'a Pool<Postgres>,
+#[derive(Debug, Clone)]
+pub struct UserWeightRepository {
+    database: Arc<Pool<Postgres>>,
 }
 
-impl<'a> UserWeightRepository<'a> {
-    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
+impl UserWeightRepository {
+    pub fn new(db_pool: Arc<Pool<Postgres>>) -> Self {
         Self { database: db_pool }
     }
 
@@ -30,7 +32,7 @@ impl<'a> UserWeightRepository<'a> {
             f32::from(weight_log.weight_kg),
             NaiveDate::from(weight_log.date),
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -46,7 +48,7 @@ impl<'a> UserWeightRepository<'a> {
             "SELECT * FROM users_weight WHERE user_id = $1",
             user_id.get_value()
         )
-        .fetch_all(self.database)
+        .fetch_all(self.database.as_ref())
         .await?
         .iter()
         .map(|weight_log_row| {
@@ -74,7 +76,7 @@ impl<'a> UserWeightRepository<'a> {
             NaiveDate::from(start_date),
             NaiveDate::from(end_date)
         )
-        .fetch_all(self.database)
+        .fetch_all(self.database.as_ref())
         .await?
         .iter()
         .map(|weight_log_row| {
@@ -94,7 +96,7 @@ impl<'a> UserWeightRepository<'a> {
             NaiveDate::from(weight_log.date),
             uuid::Uuid::from(weight_log.user_id)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())

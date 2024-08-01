@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::NaiveDate;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
@@ -10,13 +12,13 @@ use crate::{
     },
 };
 
-#[derive(Debug)]
-pub struct BodyMeasurementsRepository<'a> {
-    database: &'a Pool<Postgres>,
+#[derive(Debug, Clone)]
+pub struct UserBodyMeasurementsRepository {
+    database: Arc<Pool<Postgres>>,
 }
 
-impl<'a> BodyMeasurementsRepository<'a> {
-    pub fn new(database: &'a Pool<Postgres>) -> Self {
+impl UserBodyMeasurementsRepository {
+    pub fn new(database: Arc<Pool<Postgres>>) -> Self {
         Self { database }
     }
     pub async fn add(&self, body_measurement: BodyMeasurementsCm) -> Result<(), sqlx::Error> {
@@ -39,7 +41,7 @@ impl<'a> BodyMeasurementsRepository<'a> {
             to_optional_f32(body_measurement.hips),
             to_optional_f32(body_measurement.torso),
             to_optional_f32(body_measurement.waist)
-        ).execute(self.database).await?;
+        ).execute(self.database.as_ref()).await?;
         Ok(())
     }
 
@@ -80,7 +82,7 @@ impl<'a> BodyMeasurementsRepository<'a> {
             Uuid::from(body_measurement.user_id),
             NaiveDate::from(body_measurement.date_at)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -95,7 +97,7 @@ impl<'a> BodyMeasurementsRepository<'a> {
             Uuid::from(user_id),
             NaiveDate::from(date_at)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -111,7 +113,7 @@ impl<'a> BodyMeasurementsRepository<'a> {
             Uuid::from(&user_id),
             NaiveDate::from(&date_at)
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(BodyMeasurementsCm::builder(user_id, date_at)
@@ -141,7 +143,7 @@ impl<'a> BodyMeasurementsRepository<'a> {
             Uuid::from(&user_id),
             NaiveDate::from(&date_at)
         )
-        .fetch_all(self.database)
+        .fetch_all(self.database.as_ref())
         .await?;
 
         Ok(records

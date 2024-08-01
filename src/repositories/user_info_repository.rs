@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use sqlx::{Pool, Postgres};
 
 use crate::models::{
@@ -7,12 +9,13 @@ use crate::models::{
 use chrono::NaiveDate;
 use uuid::Uuid;
 
-pub struct UserInfoRepository<'a> {
-    database: &'a Pool<Postgres>,
+#[derive(Debug, Clone)]
+pub struct UserInfoRepository {
+    database: Arc<Pool<Postgres>>,
 }
 
-impl<'a> UserInfoRepository<'a> {
-    pub fn new(db_pool: &'a Pool<Postgres>) -> Self {
+impl<'a> UserInfoRepository {
+    pub fn new(db_pool: Arc<Pool<Postgres>>) -> Self {
         Self { database: db_pool }
     }
 
@@ -24,7 +27,7 @@ impl<'a> UserInfoRepository<'a> {
             user_info.gender as Gender,
             NaiveDate::from(user_info.birthday),
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -41,7 +44,7 @@ impl<'a> UserInfoRepository<'a> {
             NaiveDate::from(user_info.birthday),
             Uuid::from(user_info.user_id)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
         Ok(())
     }
@@ -52,7 +55,7 @@ impl<'a> UserInfoRepository<'a> {
             FROM users_info WHERE user_id = $1",
             Uuid::from(user_id)
         )
-        .fetch_one(self.database)
+        .fetch_one(self.database.as_ref())
         .await?;
 
         Ok(user_info::UserInfo::new(
@@ -68,7 +71,7 @@ impl<'a> UserInfoRepository<'a> {
             "DELETE FROM users_info WHERE user_id = $1",
             Uuid::from(user_id)
         )
-        .execute(self.database)
+        .execute(self.database.as_ref())
         .await?;
 
         Ok(())
@@ -77,6 +80,8 @@ impl<'a> UserInfoRepository<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use chrono::NaiveDate;
     use sqlx::Postgres;
 
@@ -94,14 +99,16 @@ mod tests {
     async fn test_add_get() {
         let application_settings = crate::ApplicationSettings::get_settings().unwrap();
 
-        let db_pool = application_settings
-            .database
-            .get_db_pool::<Postgres>()
-            .await
-            .unwrap();
+        let db_pool = Arc::new(
+            application_settings
+                .database
+                .get_db_pool::<Postgres>()
+                .await
+                .unwrap(),
+        );
 
-        let user_repo = UserRepository::new(&db_pool);
-        let user_info_repo = UserInfoRepository::new(&db_pool);
+        let user_repo = UserRepository::new(db_pool.clone());
+        let user_info_repo = UserInfoRepository::new(db_pool.clone());
 
         let new_user = user::NewUser::new("emaile@gmail.com", "dlskfjsdlkfjd").unwrap();
         let user_id = user_repo.add(&new_user).await.unwrap();
