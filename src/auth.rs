@@ -1,5 +1,6 @@
-// use std::error::Error;
 #![allow(dead_code)]
+use std::sync::Arc;
+
 use chrono::Days;
 use sqlx::{Pool, Postgres};
 
@@ -32,7 +33,7 @@ pub struct Authenticator {
 }
 
 impl Authenticator {
-    pub fn new(db_pool: Pool<Postgres>, jwt_secret: secrecy::Secret<String>) -> Self {
+    pub fn new(db_pool: Arc<Pool<Postgres>>, jwt_secret: secrecy::Secret<String>) -> Self {
         Self {
             user_repo: UserRepository::new(db_pool),
             session_factory: SessionFactory::new(jwt_secret, "users".into(), Days::new(5)),
@@ -55,7 +56,7 @@ impl Authenticator {
             return Err(Error::WrongCredentials);
         }
         let user = user.unwrap();
-        if user.hashed_password.compare_with(&password) {
+        if user.encrypted_password.compare_with(&password) {
             Ok(session::Session::new(user.id, Days::new(5)))
         } else {
             Err(Error::WrongCredentials)
