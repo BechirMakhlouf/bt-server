@@ -1,0 +1,13 @@
+name: supabase
+
+services:
+  server:
+    build: .
+    container_name: server
+    env_file: ".env"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PORT}
+    expose:
+      - ${PORT}:${PORT}

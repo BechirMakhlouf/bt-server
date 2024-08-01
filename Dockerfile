@@ -25,6 +25,6 @@ RUN apt-get update -y \
   && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/server /usr/local/bin
 # COPY configuration configuration
+
 ENV APP_ENVIRONMENT=prod
-EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/server"]
