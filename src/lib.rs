@@ -21,14 +21,13 @@ use std::{net::TcpListener, sync::Arc};
 const ACCESS_TOKEN_NAME: &str = "access-token";
 const _REFRESH_TOKEN_NAME: &str = "refresh-token";
 
-pub fn configure_app_state(settings: &ServerSettings) -> Arc<AppState> {
+pub fn configure_app_state(settings: &ServerSettings) -> AppState {
     let db_pool = Arc::new(
         PgPool::connect_lazy(settings.database.database_url.as_str())
             .expect("failed to connect to postgres database"),
     );
-
     let session_factory = SessionFactory::new(settings.jwt_secret.clone(), "users".into(), 600);
-    Arc::new(AppState::new(Repositories::new(db_pool), session_factory))
+    AppState::new(Repositories::new(db_pool), session_factory)
 }
 
 pub async fn run_server(settings: ServerSettings) -> std::io::Result<()> {
