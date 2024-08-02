@@ -10,19 +10,19 @@ pub struct UserRepository {
     database: Arc<Pool<Postgres>>,
 }
 
-use crate::models::user::{Email, EncryptedPassword, Id, NewUser, Password, User};
+use crate::models::user::{Email, EncryptedPassword, Id, Password, User, UserCredentials};
 
 impl UserRepository {
     pub fn new(db_pool: Arc<Pool<Postgres>>) -> Self {
         Self { database: db_pool }
     }
 
-    pub async fn add(&self, new_user: &NewUser) -> Result<Id, sqlx::Error> {
-        let encrypted_password = new_user.password.hash_with_salt();
+    pub async fn add(&self, user_credentials: &UserCredentials) -> Result<Id, sqlx::Error> {
+        let encrypted_password = user_credentials.password.hash_with_salt();
 
         let query_result = sqlx::query!(
             "INSERT INTO auth.users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
-            &new_user.email.as_str(),
+            &user_credentials.email.as_str(),
             encrypted_password.to_string(),
         )
         .fetch_one(self.database.as_ref())

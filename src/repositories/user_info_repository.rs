@@ -97,7 +97,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_get() {
-        let application_settings = crate::ApplicationSettings::get_settings().unwrap();
+        let application_settings = crate::ServerSettings::get_settings().unwrap();
 
         let db_pool = Arc::new(
             application_settings
@@ -110,8 +110,9 @@ mod tests {
         let user_repo = UserRepository::new(db_pool.clone());
         let user_info_repo = UserInfoRepository::new(db_pool.clone());
 
-        let new_user = user::NewUser::new("emaile@gmail.com", "dlskfjsdlkfjd").unwrap();
-        let user_id = user_repo.add(&new_user).await.unwrap();
+        let user_credentials =
+            user::UserCredentials::new("emaile@gmail.com", "dlskfjsdlkfjd").unwrap();
+        let user_id = user_repo.add(&user_credentials).await.unwrap();
 
         let user_info = UserInfo::new(
             user_id.clone(),
