@@ -3,31 +3,31 @@ use serde::{Deserialize, Serialize};
 use tracing::span::Id;
 
 use crate::{
-    models::user::NewUser,
+    models::user::UserCredentials,
     services::{AppState, ResponseError},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SignUpRequestBody {
+pub struct RequestBody {
     pub email: String,
     pub password: String,
 }
 
 pub async fn sign_up(
-    body: web::Json<SignUpRequestBody>,
+    body: web::Json<RequestBody>,
     app_state: web::Data<AppState>,
 ) -> impl Responder {
-    let SignUpRequestBody { password, email } = body.into_inner();
+    let RequestBody { password, email } = body.into_inner();
 
-    let new_user = match NewUser::new(&email, &password) {
+    let user_credentials = match UserCredentials::new(&email, &password) {
         Ok(user) => user,
         Err(error) => return HttpResponse::BadRequest().json(ResponseError::new(&error)),
     };
 
     let user_repo = &app_state.into_inner().repositories.user_repository;
 
-    let error = match user_repo.add(&new_user).await {
-        Ok(_) => return HttpResponse::Ok().into(),
+    let error = match user_repo.add(&user_credentials).await {
+        Ok(_) => return HttpResponse::Created().into(),
         Err(err) => err,
     };
 
