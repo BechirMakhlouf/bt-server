@@ -17,14 +17,14 @@ pub struct DatabaseSettings {
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct ApplicationSettings {
+pub struct ServerSettings {
     pub database: DatabaseSettings,
     pub host: String,
     pub port: u16,
     pub jwt_secret: Secret<String>,
 }
 
-impl ApplicationSettings {
+impl ServerSettings {
     pub fn get_settings() -> Result<Self, envy::Error> {
         let _ = dotenvy::dotenv();
 
