@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_age() {
-        let b1 = Birthday::try_from(NaiveDate::from_ymd_opt(2001, 07, 22).unwrap())
+        let b1 = Birthday::try_from(NaiveDate::from_ymd_opt(2001, 7, 22).unwrap())
             .expect("this should work");
 
         assert_eq!(b1.get_age(), 23);

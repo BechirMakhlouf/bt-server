@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::repositories::Repositories;
+use crate::{models::session::SessionFactory, repositories::Repositories};
 
 pub mod auth;
 pub mod health;
@@ -18,17 +18,21 @@ pub struct ResponseError<'a> {
 
 impl<'a> ResponseError<'a> {
     pub fn new(error: &'a str) -> Self {
-        return Self { error };
+        Self { error }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct AppState {
     repositories: Repositories,
+    session_factory: SessionFactory,
 }
 
 impl AppState {
-    pub fn new(repositories: Repositories) -> Self {
-        Self { repositories }
+    pub fn new(repositories: Repositories, session_factory: SessionFactory) -> Self {
+        Self {
+            repositories,
+            session_factory,
+        }
     }
 }

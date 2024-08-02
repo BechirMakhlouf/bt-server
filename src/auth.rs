@@ -1,13 +1,12 @@
 #![allow(dead_code)]
 use std::sync::Arc;
 
-use chrono::Days;
 use sqlx::{Pool, Postgres};
 
 use crate::{
     models::{
         session::{self, Session, SessionFactory},
-        user::{self, Email, NewUser},
+        user::{self, Email, UserCredentials},
     },
     repositories::UserRepository,
 };
@@ -36,7 +35,7 @@ impl Authenticator {
     pub fn new(db_pool: Arc<Pool<Postgres>>, jwt_secret: secrecy::Secret<String>) -> Self {
         Self {
             user_repo: UserRepository::new(db_pool),
-            session_factory: SessionFactory::new(jwt_secret, "users".into(), Days::new(5)),
+            session_factory: SessionFactory::new(jwt_secret, "users".into(), 600),
         }
     }
 
@@ -47,7 +46,7 @@ impl Authenticator {
     ) -> Result<session::Session, Error> {
         let user = self.user_repo.get_by_email(&email).await;
 
-        if let Err(_) = user {
+        if user.is_err() {
             return Err(Error::Unknown);
         }
         let user = user.unwrap();
@@ -57,14 +56,14 @@ impl Authenticator {
         }
         let user = user.unwrap();
         if user.encrypted_password.compare_with(&password) {
-            Ok(session::Session::new(user.id, Days::new(5)))
+            Ok(session::Session::new(user.id, 600))
         } else {
             Err(Error::WrongCredentials)
         }
     }
 
-    pub async fn sign_up_user(&self, new_user: NewUser) -> Result<user::Id, Error> {
-        let add_user_result = self.user_repo.add(&new_user).await;
+    pub async fn sign_up_user(&self, user_credentials: UserCredentials) -> Result<user::Id, Error> {
+        let add_user_result = self.user_repo.add(&user_credentials).await;
 
         if let Ok(user_id) = add_user_result {
             return Ok(user_id);
@@ -74,7 +73,7 @@ impl Authenticator {
         if let sqlx::Error::Database(err) = error {
             match err.kind() {
                 sqlx::error::ErrorKind::UniqueViolation => {
-                    return Err(Error::UsedEmail(new_user.email))
+                    return Err(Error::UsedEmail(user_credentials.email))
                 }
                 _ => return Err(Error::Unknown),
             }
