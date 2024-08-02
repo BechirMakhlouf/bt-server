@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::models::user;
-use ::chrono::{Days, Local};
+use ::chrono::{Local, TimeDelta};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{self};
@@ -51,18 +51,18 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(user_id: user::Id, days_until_exp: Days) -> Self {
+    pub fn new(user_id: user::Id, secs_till_expiry: u32) -> Self {
         Self {
             id: SessionId::new(),
             user_id,
             iat: chrono::Local::now(),
             exp: chrono::Local::now()
-                .checked_add_days(days_until_exp)
+                .checked_add_signed(TimeDelta::new(secs_till_expiry.into(), 0).unwrap())
                 .unwrap(),
         }
     }
     pub fn is_expired(&self) -> bool {
-        return self.exp.timestamp() <= chrono::Local::now().timestamp();
+        self.exp.timestamp() <= chrono::Local::now().timestamp()
     }
 }
 
@@ -75,24 +75,24 @@ pub struct SessionTokenClaims {
     user_id: user::Id,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SessionFactory {
     jwt_secret: secrecy::Secret<String>,
     aud: String,
-    exp_days: Days,
+    exp_secs: u32,
 }
 
 impl SessionFactory {
-    pub fn new(jwt_secret: secrecy::Secret<String>, aud: String, exp_days: Days) -> Self {
+    pub fn new(jwt_secret: secrecy::Secret<String>, aud: String, exp_secs: u32) -> Self {
         Self {
             jwt_secret,
             aud,
-            exp_days,
+            exp_secs,
         }
     }
 
     pub fn create_session(&self, user_id: user::Id) -> Session {
-        Session::new(user_id, self.exp_days)
+        Session::new(user_id, self.exp_secs)
     }
 
     pub fn create_session_jwt(&self, session: Session) -> Result<String, Error> {
@@ -144,22 +144,20 @@ impl SessionFactory {
 #[cfg(test)]
 mod tests {
 
-    use chrono::Days;
-
     use super::SessionFactory;
-    use crate::configuration::ApplicationSettings;
+    use crate::configuration::ServerSettings;
     use crate::models::user;
 
     #[test]
     fn try_tokenizing_sessions() {
-        let ApplicationSettings {
+        let ServerSettings {
             jwt_secret,
             database: _,
             host: _,
             port: _,
-        } = ApplicationSettings::get_settings().expect("application settings should not error out");
+        } = ServerSettings::get_settings().expect("application settings should not error out");
 
-        let session_factory = SessionFactory::new(jwt_secret, "users".into(), Days::new(5));
+        let session_factory = SessionFactory::new(jwt_secret, "users".into(), 600);
         let session = session_factory.create_session(user::Id::new());
 
         let jwt_str = session_factory

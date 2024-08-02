@@ -131,14 +131,14 @@ impl Display for EncryptedPassword {
 }
 
 #[derive(Debug, Clone)]
-pub struct NewUser {
+pub struct UserCredentials {
     pub email: Email,
     pub password: Password,
 }
 
-impl NewUser {
+impl UserCredentials {
     pub fn new(email: &str, password: &str) -> Result<Self, String> {
-        Ok(NewUser {
+        Ok(UserCredentials {
             email: Email::parse(email)?,
             password: Password::parse(password)?,
         })
