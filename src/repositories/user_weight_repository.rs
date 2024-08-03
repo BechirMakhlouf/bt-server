@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use chrono::NaiveDate;
-use sqlx::{query, Pool, Postgres};
+use sqlx::{Pool, Postgres};
 
 use crate::models::{
     user,
-    user_weight::{self, UserWeight, WeightDate},
+    user_weight::{UserWeight, WeightDate},
 };
 
 #[derive(Debug, Clone)]

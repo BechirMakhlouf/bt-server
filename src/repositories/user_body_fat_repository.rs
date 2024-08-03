@@ -1,13 +1,9 @@
 use std::sync::Arc;
 
 use chrono::NaiveDate;
-use sqlx::{query, Pool, Postgres};
+use sqlx::{Pool, Postgres};
 
-use crate::models::{
-    body_fat::UserBodyFat,
-    user,
-    user_weight::{self, WeightDate},
-};
+use crate::models::{body_fat::UserBodyFat, user, user_weight::WeightDate};
 
 #[derive(Debug, Clone)]
 pub struct UserBodyFatRepository {

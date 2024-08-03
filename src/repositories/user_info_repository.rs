@@ -4,7 +4,7 @@ use sqlx::{Pool, Postgres};
 
 use crate::models::{
     user,
-    user_info::{self, Birthday, Gender, UserInfo, Username},
+    user_info::{self, Gender, UserInfo},
 };
 use chrono::NaiveDate;
 use uuid::Uuid;
@@ -83,7 +83,7 @@ mod tests {
     use std::sync::Arc;
 
     use chrono::NaiveDate;
-    use sqlx::Postgres;
+    
 
     use crate::{
         models::{
@@ -97,15 +97,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_get() {
-        let application_settings = crate::ServerSettings::get_settings().unwrap();
+        let application_settings = crate::Settings::get_settings().unwrap();
 
-        let db_pool = Arc::new(
-            application_settings
-                .database
-                .get_db_pool::<Postgres>()
-                .await
-                .unwrap(),
-        );
+        let db_pool = Arc::new(application_settings.database.get_db_pool().unwrap());
 
         let user_repo = UserRepository::new(db_pool.clone());
         let user_info_repo = UserInfoRepository::new(db_pool.clone());

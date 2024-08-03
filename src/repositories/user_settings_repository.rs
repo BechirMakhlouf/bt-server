@@ -20,7 +20,7 @@ impl UserSettingsRepository {
     }
 
     pub async fn add(&self, user_settings: UsersSettings) -> Result<(), sqlx::Error> {
-        let query = sqlx::query!(
+        sqlx::query!(
             "insert into users_settings (user_id, pref_theme, pref_unit) values ($1, $2, $3)",
             Uuid::from(&user_settings.user_id),
             user_settings.pref_theme as ThemeMode,

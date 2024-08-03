@@ -8,7 +8,7 @@ use crate::{
     models::{body_measurements::BodyMeasurementsCm, user},
     types::{
         past_naive_date::PastNaiveDate,
-        positive_non_zero_float::{to_opt_pos_f32, to_optional_f32, PositiveNonZeroF32},
+        positive_non_zero_float::{to_opt_pos_f32, to_optional_f32},
     },
 };
 
