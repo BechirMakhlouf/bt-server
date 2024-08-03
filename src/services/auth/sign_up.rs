@@ -1,6 +1,5 @@
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
-use tracing::span::Id;
 
 use crate::{
     models::user::UserCredentials,
