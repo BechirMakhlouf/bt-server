@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 pub mod body_fat;
 pub mod body_measurements;
 pub mod session;

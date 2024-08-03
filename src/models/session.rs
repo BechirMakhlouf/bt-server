@@ -68,11 +68,11 @@ impl Session {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SessionTokenClaims {
-    iat: usize,
-    exp: usize,
-    aud: String,
-    session_id: SessionId,
-    user_id: user::Id,
+    pub iat: usize,
+    pub exp: usize,
+    pub aud: String,
+    pub session_id: SessionId,
+    pub user_id: user::Id,
 }
 
 #[derive(Debug, Clone)]
@@ -124,7 +124,10 @@ impl SessionFactory {
         Ok(encoded_token)
     }
 
-    fn parse_session_jwt(
+    pub fn create_jwt_from_user_id(&self, user_id: user::Id) -> Result<String, Error> {
+        self.create_session_jwt(self.create_session(user_id))
+    }
+    pub fn parse_session_jwt(
         &self,
         token: &str,
     ) -> Result<jsonwebtoken::TokenData<SessionTokenClaims>, jsonwebtoken::errors::Error> {
@@ -145,17 +148,18 @@ impl SessionFactory {
 mod tests {
 
     use super::SessionFactory;
-    use crate::configuration::ServerSettings;
+    use crate::configuration::Settings;
     use crate::models::user;
 
     #[test]
     fn try_tokenizing_sessions() {
-        let ServerSettings {
+        let Settings {
             jwt_secret,
             database: _,
             host: _,
             port: _,
-        } = ServerSettings::get_settings().expect("application settings should not error out");
+            app_env: _,
+        } = Settings::get_settings().expect("application settings should not error out");
 
         let session_factory = SessionFactory::new(jwt_secret, "users".into(), 600);
         let session = session_factory.create_session(user::Id::new());

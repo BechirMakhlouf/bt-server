@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::{models::session::SessionFactory, repositories::Repositories};
+use crate::{models::session::SessionFactory, repositories::Repositories, types::app_env::AppEnv};
 
 pub mod auth;
 pub mod health;
@@ -24,13 +24,19 @@ impl<'a> ResponseError<'a> {
 
 #[derive(Debug, Clone)]
 pub struct AppState {
+    app_env: AppEnv,
     repositories: Repositories,
     session_factory: SessionFactory,
 }
 
 impl AppState {
-    pub fn new(repositories: Repositories, session_factory: SessionFactory) -> Self {
+    pub fn new(
+        repositories: Repositories,
+        session_factory: SessionFactory,
+        app_env: AppEnv,
+    ) -> Self {
         Self {
+            app_env,
             repositories,
             session_factory,
         }

@@ -1,6 +1,5 @@
-#![allow(unused)]
 use secrecy::Secret;
-use sqlx::{Database, Pool};
+use sqlx::PgPool;
 use url::Url;
 
 use crate::types::app_env::AppEnv;
@@ -20,7 +19,7 @@ pub struct DatabaseSettings {
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct ServerSettings {
+pub struct Settings {
     pub database: DatabaseSettings,
     pub host: String,
     pub port: u16,
@@ -28,7 +27,7 @@ pub struct ServerSettings {
     pub app_env: AppEnv,
 }
 
-impl ServerSettings {
+impl Settings {
     pub fn get_settings() -> Result<Self, envy::Error> {
         let _ = dotenvy::dotenv();
 
@@ -56,7 +55,7 @@ impl ServerSettings {
 }
 
 impl DatabaseSettings {
-    pub async fn get_db_pool<T: Database>(&self) -> Result<Pool<T>, sqlx::error::Error> {
-        Pool::<T>::connect(self.database_url.as_str()).await
+    pub fn get_db_pool(&self) -> Result<PgPool, sqlx::error::Error> {
+        PgPool::connect_lazy(self.database_url.as_str())
     }
 }
