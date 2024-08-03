@@ -3,12 +3,15 @@ use secrecy::Secret;
 use sqlx::{Database, Pool};
 use url::Url;
 
+use crate::types::app_env::AppEnv;
+
 #[derive(Debug, serde::Deserialize)]
 pub struct EnvVars {
     database_url: url::Url,
     port: u16,
     jwt_secret: String,
     host: String,
+    app_env: AppEnv,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -22,6 +25,7 @@ pub struct ServerSettings {
     pub host: String,
     pub port: u16,
     pub jwt_secret: Secret<String>,
+    pub app_env: AppEnv,
 }
 
 impl ServerSettings {
@@ -33,6 +37,7 @@ impl ServerSettings {
             jwt_secret,
             host,
             port,
+            app_env,
         } = match envy::from_env::<EnvVars>() {
             Ok(env_vars) => env_vars,
             Err(e) => return Err(e),
@@ -44,6 +49,7 @@ impl ServerSettings {
             host,
             port,
             database,
+            app_env,
             jwt_secret: Secret::new(jwt_secret),
         })
     }
