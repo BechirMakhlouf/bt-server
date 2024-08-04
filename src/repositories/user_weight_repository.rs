@@ -106,6 +106,7 @@ impl UserWeightRepository {
             UserWeight::from_trusted(record.user_id.into(), record.weight_kg, record.date_at)
         }))
     }
+
     pub async fn delete(
         &self,
         user_id: &user::Id,

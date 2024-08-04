@@ -3,7 +3,11 @@ use std::sync::Arc;
 use chrono::NaiveDate;
 use sqlx::{Pool, Postgres};
 
-use crate::models::{body_fat::UserBodyFat, user, user_weight::WeightDate};
+use crate::models::{
+    body_fat::{BodyFatDate, UserBodyFat},
+    user,
+    user_weight::WeightDate,
+};
 
 #[derive(Debug, Clone)]
 pub struct UserBodyFatRepository {
@@ -15,7 +19,7 @@ impl UserBodyFatRepository {
         Self { database: db_pool }
     }
 
-    pub async fn add_or_update(&self, users_body_fat: UserBodyFat) -> Result<(), sqlx::Error> {
+    pub async fn add_or_update(&self, users_body_fat: &UserBodyFat) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "
             INSERT INTO users_body_fat (user_id, body_fat, date_at)
@@ -26,8 +30,8 @@ impl UserBodyFatRepository {
                 date_at = EXCLUDED.date_at;
             ",
             users_body_fat.user_id.get_uuid(),
-            f32::from(users_body_fat.body_fat),
-            NaiveDate::from(users_body_fat.date),
+            f32::from(&users_body_fat.body_fat),
+            NaiveDate::from(&users_body_fat.date),
         )
         .execute(self.database.as_ref())
         .await?;
@@ -37,7 +41,7 @@ impl UserBodyFatRepository {
 
     pub async fn get_all_user_logs(
         &self,
-        user_id: user::Id,
+        user_id: &user::Id,
     ) -> Result<Vec<UserBodyFat>, sqlx::Error> {
         //TODO: what to do when there are no logs? currently in produces an error
 
@@ -87,11 +91,33 @@ impl UserBodyFatRepository {
         .collect())
     }
 
-    pub async fn delete(&self, user_body_fat: UserBodyFat) -> Result<(), sqlx::Error> {
+    pub async fn get_user_log_by_date(
+        &self,
+        user_id: &user::Id,
+        date_at: &BodyFatDate,
+    ) -> Result<Option<UserBodyFat>, sqlx::Error> {
+        //TODO: what to do when there are no logs? currently in produces an error
+
+        Ok(sqlx::query!(
+            "SELECT * FROM users_body_fat WHERE user_id = $1 AND date_at = $2",
+            user_id.get_uuid(),
+            NaiveDate::from(date_at),
+        )
+        .fetch_optional(self.database.as_ref())
+        .await?
+        .map(|record| {
+            UserBodyFat::from_trusted(record.user_id.into(), record.body_fat, record.date_at)
+        }))
+    }
+    pub async fn delete(
+        &self,
+        user_id: &user::Id,
+        date_at: &BodyFatDate,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "DELETE FROM users_body_fat WHERE date_at = $1 AND user_id = $2",
-            NaiveDate::from(user_body_fat.date),
-            uuid::Uuid::from(user_body_fat.user_id)
+            NaiveDate::from(date_at),
+            uuid::Uuid::from(user_id)
         )
         .execute(self.database.as_ref())
         .await?;

@@ -38,11 +38,23 @@ impl From<BodyFat> for f32 {
     }
 }
 
+impl From<&BodyFat> for f32 {
+    fn from(value: &BodyFat) -> Self {
+        value.0
+    }
+}
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct BodyFatDate(chrono::NaiveDate);
 
 impl BodyFatDate {
     pub fn parse(date: chrono::NaiveDate) -> Result<Self> {
+        if date > chrono::Utc::now().date_naive() {
+            return Err(Error::InvalidBodyFatDate(date));
+        }
+
+        Ok(Self(date))
+    }
+    pub fn new(date: chrono::NaiveDate) -> Result<Self> {
         if date > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidBodyFatDate(date));
         }
@@ -67,8 +79,13 @@ impl From<BodyFatDate> for NaiveDate {
         value.0
     }
 }
+impl From<&BodyFatDate> for NaiveDate {
+    fn from(value: &BodyFatDate) -> Self {
+        value.0
+    }
+}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserBodyFat {
     pub user_id: user::Id,
     pub body_fat: BodyFat,
@@ -82,6 +99,13 @@ impl UserBodyFat {
             body_fat: body_fat.try_into()?,
             date: date_at.try_into()?,
         })
+    }
+    pub fn from_trusted(user_id: user::Id, body_fat: f32, date_at: chrono::NaiveDate) -> Self {
+        Self {
+            user_id,
+            body_fat: BodyFat(body_fat),
+            date: BodyFatDate(date_at),
+        }
     }
 }
 
