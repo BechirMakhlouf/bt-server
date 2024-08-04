@@ -76,11 +76,7 @@ pub struct UserBodyFat {
 }
 
 impl UserBodyFat {
-    pub fn new(
-        user_id: user::Id,
-        body_fat: f32,
-        date_at: chrono::NaiveDate,
-    ) -> Result<Self, Error> {
+    pub fn new(user_id: user::Id, body_fat: f32, date_at: chrono::NaiveDate) -> Result<Self> {
         Ok(Self {
             user_id,
             body_fat: body_fat.try_into()?,

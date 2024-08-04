@@ -20,7 +20,7 @@ pub async fn delete(
 
     let user_id = token_data.claims.user_id;
 
-    match app_state.repositories.user_weight.delete(&user_id).await {
+    match app_state.repositories.user_settings.delete(&user_id).await {
         Ok(()) => Ok(HttpResponse::Ok()),
         Err(err) => Err(error::ErrorInternalServerError(err)),
     }
