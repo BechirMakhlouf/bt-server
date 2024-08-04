@@ -3,10 +3,7 @@ use actix_web::{web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::{
-        session::{self},
-        user::UserCredentials,
-    },
+    models::user::UserCredentials,
     services::{AppState, ResponseError},
     ACCESS_TOKEN_NAME,
 };

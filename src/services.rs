@@ -24,7 +24,7 @@ impl<'a> ResponseError<'a> {
 
 #[derive(Debug, Clone)]
 pub struct AppState {
-    app_env: AppEnv,
+    _app_env: AppEnv,
     repositories: Repositories,
     session_factory: SessionFactory,
 }
@@ -36,7 +36,7 @@ impl AppState {
         app_env: AppEnv,
     ) -> Self {
         Self {
-            app_env,
+            _app_env: app_env,
             repositories,
             session_factory,
         }

@@ -1,22 +1,10 @@
 use actix_session::Session;
-use actix_web::{
-    error,
-    web::{self, Query},
-    HttpResponse, Responder,
-};
-use chrono::NaiveDate;
-use serde::{Deserialize, Serialize};
+use actix_web::{error, web, HttpResponse, Responder};
 
-use crate::{models::user_weight::WeightDate, services::AppState, ACCESS_TOKEN_NAME};
+use crate::{services::AppState, ACCESS_TOKEN_NAME};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Parameters {
-    pub date: NaiveDate,
-}
-
-pub async fn delete(
+pub async fn get_all(
     session: Session,
-    query_params: Query<Parameters>,
     app_state: web::Data<AppState>,
 ) -> actix_web::Result<impl Responder> {
     let access_token = match session.get::<String>(ACCESS_TOKEN_NAME) {
@@ -30,20 +18,15 @@ pub async fn delete(
         Err(err) => return Err(error::ErrorUnauthorized(err)),
     };
 
-    let user_id = token_data.claims.user_id;
-
-    let weight_date = match WeightDate::new(query_params.date) {
-        Ok(weight_date) => weight_date,
-        Err(err) => return Err(error::ErrorBadRequest(err)),
-    };
+    let user_id = &token_data.claims.user_id;
 
     match app_state
         .repositories
         .user_weight
-        .delete(&user_id, &weight_date)
+        .get_all_user_logs(user_id)
         .await
     {
-        Ok(()) => Ok(HttpResponse::Ok()),
+        Ok(logs) => Ok(HttpResponse::Ok().json(logs)),
         Err(err) => Err(error::ErrorInternalServerError(err)),
     }
 }

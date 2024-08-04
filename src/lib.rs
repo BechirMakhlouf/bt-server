@@ -33,7 +33,7 @@ pub fn configure_app_state(settings: &Settings) -> AppState {
             .expect("failed to connect to postgres database"),
     );
 
-    let session_factory = SessionFactory::new(settings.jwt_secret.clone(), "users".into(), 600);
+    let session_factory = SessionFactory::new(settings.jwt_secret.clone(), "users".into(), 60000);
     AppState::new(
         Repositories::new(db_pool),
         session_factory,

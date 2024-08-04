@@ -132,6 +132,6 @@ mod tests {
             .expect("retreived user should not be none");
         assert_eq!(retreived_user_info.user_id, user_info.user_id);
 
-        user_info_repo.delete(&user_id).await;
+        let _ = user_info_repo.delete(&user_id).await;
     }
 }

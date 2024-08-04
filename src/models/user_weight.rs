@@ -38,11 +38,24 @@ impl From<WeightKg> for f32 {
     }
 }
 
+impl From<&WeightKg> for f32 {
+    fn from(value: &WeightKg) -> Self {
+        value.0
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct WeightDate(chrono::NaiveDate);
 
 impl WeightDate {
     pub fn parse(date: chrono::NaiveDate) -> Result<Self> {
+        if date > chrono::Utc::now().date_naive() {
+            return Err(Error::InvalidWeightDate(date));
+        }
+
+        Ok(Self(date))
+    }
+    pub fn new(date: chrono::NaiveDate) -> Result<Self> {
         if date > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidWeightDate(date));
         }
@@ -67,8 +80,13 @@ impl From<WeightDate> for NaiveDate {
         value.0
     }
 }
+impl From<&WeightDate> for NaiveDate {
+    fn from(value: &WeightDate) -> Self {
+        value.0
+    }
+}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct UserWeight {
     pub user_id: user::Id,
     pub weight_kg: WeightKg,
@@ -82,6 +100,13 @@ impl UserWeight {
             weight_kg: weight_kg.try_into()?,
             date: date_at.try_into()?,
         })
+    }
+    pub fn from_trusted(user_id: user::Id, weight_kg: f32, date_at: chrono::NaiveDate) -> Self {
+        Self {
+            user_id,
+            weight_kg: WeightKg(weight_kg),
+            date: WeightDate(date_at),
+        }
     }
 }
 
