@@ -25,7 +25,7 @@ CREATE TABLE users_body_measurements_cm (
     CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES auth.users
 );
 
-CREATE INDEX idx_body_measurements_date_user_id ON users_body_measurements_cm (user_id, date_at);
+CREATE UNIQUE INDEX idx_body_measurements_date_user_id ON users_body_measurements_cm (user_id, date_at);
 
 CREATE TRIGGER handle_updated_at BEFORE
 UPDATE ON users_body_measurements_cm FOR EACH ROW EXECUTE FUNCTION moddatetime ();

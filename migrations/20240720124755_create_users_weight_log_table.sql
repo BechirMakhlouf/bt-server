@@ -13,7 +13,7 @@ create table users_weight (
     CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES auth.users
 );
 
-CREATE INDEX idx_users_weight_date_user_id ON users_weight (user_id, date_at);
+CREATE UNIQUE INDEX idx_users_weight_date_user_id ON users_weight (user_id, date_at);
 
 CREATE TRIGGER handle_updated_at BEFORE
 UPDATE ON users_weight FOR EACH ROW EXECUTE FUNCTION moddatetime ();

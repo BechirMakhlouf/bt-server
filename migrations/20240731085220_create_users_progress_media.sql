@@ -13,7 +13,7 @@ CREATE TABLE users_progress_media (
     CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES auth.users
 );
 
-CREATE INDEX idx_users_progress_media_date_user_id ON users_progress_media (user_id, date_at);
+CREATE UNIQUE INDEX idx_users_progress_media_date_user_id ON users_progress_media (user_id, date_at);
 
 CREATE TRIGGER handle_updated_at BEFORE
 UPDATE ON users_progress_media FOR EACH ROW EXECUTE FUNCTION moddatetime ();
