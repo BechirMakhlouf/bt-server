@@ -28,7 +28,7 @@ impl UserWeightRepository {
                 weight_kg = EXCLUDED.weight_kg,
                 date_at = EXCLUDED.date_at;
             ",
-            weight_log.user_id.get_value(),
+            weight_log.user_id.get_uuid(),
             f32::from(weight_log.weight_kg),
             NaiveDate::from(weight_log.date),
         )
@@ -46,7 +46,7 @@ impl UserWeightRepository {
 
         Ok(sqlx::query!(
             "SELECT * FROM users_weight WHERE user_id = $1",
-            user_id.get_value()
+            user_id.get_uuid()
         )
         .fetch_all(self.database.as_ref())
         .await?
@@ -72,7 +72,7 @@ impl UserWeightRepository {
 
         Ok(sqlx::query!(
             "SELECT * FROM users_weight WHERE user_id = $1 AND date_at BETWEEN $2 AND $3",
-            user_id.get_value(),
+            user_id.get_uuid(),
             NaiveDate::from(start_date),
             NaiveDate::from(end_date)
         )

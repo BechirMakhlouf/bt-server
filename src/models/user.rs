@@ -28,13 +28,21 @@ pub struct EncryptedPassword(String);
 #[sqlx(transparent)]
 pub struct Id(uuid::Uuid);
 
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Invalid string for user id: {0}")]
+    InvalidIdString(String),
+}
 impl Id {
     pub fn new() -> Self {
         Self(uuid::Uuid::new_v4())
     }
 
-    pub fn get_value(&self) -> &Uuid {
+    pub fn get_uuid(&self) -> &Uuid {
         &self.0
+    }
+    pub fn to_string(&self) -> String {
+        self.0.to_string()
     }
 }
 
@@ -61,6 +69,21 @@ impl From<&Id> for Uuid {
     }
 }
 
+impl From<Id> for String {
+    fn from(value: Id) -> Self {
+        value.0.to_string()
+    }
+}
+
+impl TryFrom<&str> for Id {
+    type Error = Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match Uuid::try_from(value) {
+            Ok(uuid) => Ok(uuid.into()),
+            Err(_) => Err(Error::InvalidIdString(value.into())),
+        }
+    }
+}
 impl Email {
     pub fn parse(email: &str) -> Result<Self, &str> {
         let is_valid = validator::ValidateEmail::validate_email(&email);

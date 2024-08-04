@@ -7,9 +7,10 @@ pub mod repositories;
 pub mod services;
 pub mod types;
 
-use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_session::{config::PersistentSession, storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{
-    cookie::Key,
+    cookie::{time::Duration, Key, SameSite},
+    middleware::Logger,
     web::{scope, Data},
     App, HttpServer,
 };
@@ -22,6 +23,7 @@ use std::{net::TcpListener, sync::Arc};
 
 const ACCESS_TOKEN_NAME: &str = "access-token";
 const _REFRESH_TOKEN_NAME: &str = "refresh-token";
+const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
 
 pub fn configure_app_state(settings: &Settings) -> AppState {
     let db_pool = Arc::new(
@@ -38,7 +40,6 @@ pub fn configure_app_state(settings: &Settings) -> AppState {
         settings.app_env.clone(),
     )
 }
-
 pub async fn run_server(settings: Settings) -> std::io::Result<()> {
     let addr = TcpListener::bind(format!("{}:{}", settings.host, settings.port))
         .unwrap()
@@ -51,9 +52,15 @@ pub async fn run_server(settings: Settings) -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .app_data(Data::new(app_state.clone()))
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), Key::from(&[0; 64]))
+                    .cookie_name("session".into())
+                    .session_lifecycle(
+                        PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK)),
+                    )
+                    .cookie_same_site(SameSite::Strict)
                     .build(),
             )
             .service(services::health::check)

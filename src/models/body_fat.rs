@@ -15,6 +15,8 @@ pub enum Error {
     InvalidBodyFatDate(chrono::NaiveDate),
 }
 
+pub type Result<T> = core::result::Result<T, Error>;
+
 //TODO: weightDate interval struct
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
@@ -22,7 +24,7 @@ pub struct BodyFat(f32);
 
 impl TryFrom<f32> for BodyFat {
     type Error = Error;
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
+    fn try_from(value: f32) -> Result<Self> {
         match value {
             0.0..=100.0 => Ok(Self(value)),
             _ => Err(Error::InvalidBodyFat(value)),
@@ -40,7 +42,7 @@ impl From<BodyFat> for f32 {
 pub struct BodyFatDate(chrono::NaiveDate);
 
 impl BodyFatDate {
-    pub fn parse(date: chrono::NaiveDate) -> Result<Self, Error> {
+    pub fn parse(date: chrono::NaiveDate) -> Result<Self> {
         if date > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidBodyFatDate(date));
         }
@@ -52,7 +54,7 @@ impl BodyFatDate {
 impl TryFrom<NaiveDate> for BodyFatDate {
     type Error = Error;
 
-    fn try_from(value: chrono::NaiveDate) -> Result<Self, Self::Error> {
+    fn try_from(value: chrono::NaiveDate) -> Result<Self> {
         if value > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidBodyFatDate(value));
         }

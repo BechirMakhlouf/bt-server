@@ -30,7 +30,7 @@ pub async fn sign_in(
         Err(error) => return HttpResponse::BadRequest().json(ResponseError::new(&error)),
     };
 
-    let user_repo = &app_state.repositories.user_repository;
+    let user_repo = &app_state.repositories.user;
 
     let opt_user = match user_repo.get_by_email(&user_credentials.email).await {
         Ok(opt_user) => opt_user,

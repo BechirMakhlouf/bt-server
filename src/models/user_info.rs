@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use chrono::{NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use validator::ValidateRegex;
@@ -7,10 +9,19 @@ use super::user;
 #[derive(Debug, thiserror::Error, Clone)]
 pub enum Error {
     #[error("Invalid birthday date: {0}")]
-    InvalidBirthdayDate(chrono::NaiveDate),
+    InvalidBirthdayNaiveDate(chrono::NaiveDate),
+
+    #[error("Invalid birthday date: {0}")]
+    InvalidBirthdayString(String),
 
     #[error("Invalid username: {0}")]
     InvalidUsername(String),
+
+    #[error("Invalid gender: {0}")]
+    InvalidGender(String),
+
+    #[error("Invalid user id: {0}")]
+    InvalidUserId(String),
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type, Clone)]
@@ -40,6 +51,19 @@ impl From<Gender> for &str {
             Gender::Female => "female",
             Gender::Other => "other",
             Gender::Unknown => "unknown",
+        }
+    }
+}
+
+impl TryFrom<&str> for Gender {
+    type Error = Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "male" => Ok(Gender::Male),
+            "female" => Ok(Gender::Female),
+            "other" => Ok(Gender::Other),
+            "unknown" => Ok(Gender::Unknown),
+            invalid_gender => Err(Error::InvalidGender(invalid_gender.into())),
         }
     }
 }
@@ -90,15 +114,24 @@ impl TryFrom<NaiveDate> for Birthday {
         let age = chrono::Utc::now().date_naive().years_since(date);
 
         if age.is_none() {
-            return Err(Error::InvalidBirthdayDate(date));
+            return Err(Error::InvalidBirthdayNaiveDate(date));
         }
         match age.unwrap() {
             1..=124 => Ok(Self(date)),
-            _ => Err(Error::InvalidBirthdayDate(date)),
+            _ => Err(Error::InvalidBirthdayNaiveDate(date)),
         }
     }
 }
 
+impl TryFrom<&str> for Birthday {
+    type Error = Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match NaiveDate::from_str(value) {
+            Ok(naive_date) => Ok(Self::try_from(naive_date)?),
+            Err(_) => Err(Error::InvalidBirthdayString(value.into())),
+        }
+    }
+}
 impl From<Birthday> for NaiveDate {
     fn from(value: Birthday) -> Self {
         value.0
@@ -122,7 +155,7 @@ impl From<&Birthday> for NaiveDate {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserInfo {
     pub user_id: user::Id,
     pub username: Username,
@@ -142,6 +175,22 @@ impl UserInfo {
             birthday: Birthday::try_from(birthday)?,
             gender,
             username: Username::try_from(username)?,
+        })
+    }
+
+    pub fn try_from_strs(
+        user_id: &str,
+        username: &str,
+        gender: &str,
+        birthday: &str,
+    ) -> Result<Self, Error> {
+        Ok(Self {
+            birthday: birthday.try_into()?,
+            gender: gender.try_into()?,
+            username: username.try_into()?,
+            user_id: user_id
+                .try_into()
+                .map_err(|_| Error::InvalidUserId(user_id.to_string()))?,
         })
     }
 }

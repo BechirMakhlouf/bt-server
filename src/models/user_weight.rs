@@ -15,6 +15,8 @@ pub enum Error {
     InvalidWeightDate(chrono::NaiveDate),
 }
 
+pub type Result<T> = core::result::Result<T, Error>;
+
 //TODO: weightDate interval struct
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
@@ -22,7 +24,7 @@ pub struct WeightKg(f32);
 
 impl TryFrom<f32> for WeightKg {
     type Error = Error;
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
+    fn try_from(value: f32) -> Result<Self> {
         match value {
             5.0..=1000.0 => Ok(Self(value)),
             _ => Err(Error::InvalidWeight(value)),
@@ -40,7 +42,7 @@ impl From<WeightKg> for f32 {
 pub struct WeightDate(chrono::NaiveDate);
 
 impl WeightDate {
-    pub fn parse(date: chrono::NaiveDate) -> Result<Self, Error> {
+    pub fn parse(date: chrono::NaiveDate) -> Result<Self> {
         if date > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidWeightDate(date));
         }
@@ -52,7 +54,7 @@ impl WeightDate {
 impl TryFrom<NaiveDate> for WeightDate {
     type Error = Error;
 
-    fn try_from(value: chrono::NaiveDate) -> Result<Self, Self::Error> {
+    fn try_from(value: chrono::NaiveDate) -> Result<Self> {
         if value > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidWeightDate(value));
         }
@@ -74,11 +76,7 @@ pub struct UserWeight {
 }
 
 impl UserWeight {
-    pub fn new(
-        user_id: user::Id,
-        weight_kg: f32,
-        date_at: chrono::NaiveDate,
-    ) -> Result<Self, Error> {
+    pub fn new(user_id: user::Id, weight_kg: f32, date_at: chrono::NaiveDate) -> Result<Self> {
         Ok(Self {
             user_id,
             weight_kg: weight_kg.try_into()?,

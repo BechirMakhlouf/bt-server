@@ -49,24 +49,29 @@ impl<'a> UserInfoRepository {
         Ok(())
     }
 
-    pub async fn get(&self, user_id: user::Id) -> Result<UserInfo, sqlx::Error> {
+    pub async fn get(&self, user_id: &user::Id) -> Result<Option<UserInfo>, sqlx::Error> {
         let query_result = sqlx::query!(
             "SELECT user_id, username , gender AS \"gender: Gender\" , birthday
             FROM users_info WHERE user_id = $1",
             Uuid::from(user_id)
         )
-        .fetch_one(self.database.as_ref())
+        .fetch_optional(self.database.as_ref())
         .await?;
 
-        Ok(user_info::UserInfo::new(
-            query_result.user_id.into(),
-            query_result.username,
-            query_result.gender,
-            query_result.birthday,
-        )
-        .unwrap())
+        match query_result {
+            Some(result) => Ok(Some(
+                user_info::UserInfo::new(
+                    result.user_id.into(),
+                    result.username,
+                    result.gender,
+                    result.birthday,
+                )
+                .unwrap(),
+            )),
+            None => Ok(None),
+        }
     }
-    pub async fn delete(&self, user_id: user::Id) -> Result<(), sqlx::Error> {
+    pub async fn delete(&self, user_id: &user::Id) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "DELETE FROM users_info WHERE user_id = $1",
             Uuid::from(user_id)
@@ -83,7 +88,6 @@ mod tests {
     use std::sync::Arc;
 
     use chrono::NaiveDate;
-    
 
     use crate::{
         models::{
@@ -122,10 +126,12 @@ mod tests {
             .expect("user_info should be added without problems");
 
         let retreived_user_info = user_info_repo
-            .get(user_id)
+            .get(&user_id)
             .await
-            .expect("user_info should be retreived without errors.");
+            .expect("user_info should be retreived without errors.")
+            .expect("retreived user should not be none");
+        assert_eq!(retreived_user_info.user_id, user_info.user_id);
 
-        assert_eq!(retreived_user_info.user_id, user_info.user_id)
+        user_info_repo.delete(&user_id).await;
     }
 }

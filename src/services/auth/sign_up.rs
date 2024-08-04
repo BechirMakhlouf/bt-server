@@ -23,7 +23,7 @@ pub async fn sign_up(
         Err(error) => return HttpResponse::BadRequest().json(ResponseError::new(&error)),
     };
 
-    let user_repo = &app_state.into_inner().repositories.user_repository;
+    let user_repo = &app_state.into_inner().repositories.user;
 
     let error = match user_repo.add(&user_credentials).await {
         Ok(_) => return HttpResponse::Created().into(),

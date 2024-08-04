@@ -25,7 +25,7 @@ impl UserBodyFatRepository {
                 body_fat = EXCLUDED.body_fat,
                 date_at = EXCLUDED.date_at;
             ",
-            users_body_fat.user_id.get_value(),
+            users_body_fat.user_id.get_uuid(),
             f32::from(users_body_fat.body_fat),
             NaiveDate::from(users_body_fat.date),
         )
@@ -43,7 +43,7 @@ impl UserBodyFatRepository {
 
         Ok(sqlx::query!(
             "SELECT * FROM users_body_fat WHERE user_id = $1",
-            user_id.get_value()
+            user_id.get_uuid()
         )
         .fetch_all(self.database.as_ref())
         .await?
@@ -69,7 +69,7 @@ impl UserBodyFatRepository {
 
         Ok(sqlx::query!(
             "SELECT * FROM users_body_fat WHERE user_id = $1 AND date_at BETWEEN $2 AND $3",
-            user_id.get_value(),
+            user_id.get_uuid(),
             NaiveDate::from(start_date),
             NaiveDate::from(end_date)
         )
