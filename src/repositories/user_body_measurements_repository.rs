@@ -89,8 +89,8 @@ impl UserBodyMeasurementsRepository {
     }
     pub async fn delete(
         &self,
-        user_id: user::Id,
-        date_at: PastNaiveDate,
+        user_id: &user::Id,
+        date_at: &PastNaiveDate,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "DELETE FROM users_body_measurements_cm WHERE user_id = $1 AND date_at = $2;",
@@ -103,45 +103,45 @@ impl UserBodyMeasurementsRepository {
         Ok(())
     }
 
-    pub async fn get_user_measurement(
+    pub async fn get(
         &self,
         user_id: user::Id,
         date_at: PastNaiveDate,
-    ) -> Result<BodyMeasurementsCm, sqlx::Error> {
+    ) -> Result<Option<BodyMeasurementsCm>, sqlx::Error> {
         let record = sqlx::query!(
             "SELECT * FROM users_body_measurements_cm WHERE user_id = $1 AND date_at = $2;",
             Uuid::from(&user_id),
             NaiveDate::from(&date_at)
         )
-        .fetch_one(self.database.as_ref())
+        .fetch_optional(self.database.as_ref())
         .await?;
 
-        Ok(BodyMeasurementsCm::builder(user_id, date_at)
-            .left_arm(to_opt_pos_f32(record.left_arm))
-            .right_arm(to_opt_pos_f32(record.right_arm))
-            .left_thigh(to_opt_pos_f32(record.left_thigh))
-            .right_thigh(to_opt_pos_f32(record.right_thigh))
-            .left_wrist(to_opt_pos_f32(record.left_wrist))
-            .right_wrist(to_opt_pos_f32(record.right_wrist))
-            .left_calf(to_opt_pos_f32(record.left_calf))
-            .right_calf(to_opt_pos_f32(record.right_calf))
-            .height(to_opt_pos_f32(record.height))
-            .neck(to_opt_pos_f32(record.neck))
-            .hips(to_opt_pos_f32(record.hips))
-            .torso(to_opt_pos_f32(record.torso))
-            .waist(to_opt_pos_f32(record.waist))
-            .build())
+        Ok(record.map(|record| {
+            BodyMeasurementsCm::builder(user_id, date_at)
+                .left_arm(to_opt_pos_f32(record.left_arm))
+                .right_arm(to_opt_pos_f32(record.right_arm))
+                .left_thigh(to_opt_pos_f32(record.left_thigh))
+                .right_thigh(to_opt_pos_f32(record.right_thigh))
+                .left_wrist(to_opt_pos_f32(record.left_wrist))
+                .right_wrist(to_opt_pos_f32(record.right_wrist))
+                .left_calf(to_opt_pos_f32(record.left_calf))
+                .right_calf(to_opt_pos_f32(record.right_calf))
+                .height(to_opt_pos_f32(record.height))
+                .neck(to_opt_pos_f32(record.neck))
+                .hips(to_opt_pos_f32(record.hips))
+                .torso(to_opt_pos_f32(record.torso))
+                .waist(to_opt_pos_f32(record.waist))
+                .build()
+        }))
     }
 
-    pub async fn get_all_user_measurements(
+    pub async fn get_all(
         &self,
-        user_id: user::Id,
-        date_at: PastNaiveDate,
+        user_id: &user::Id,
     ) -> Result<Vec<BodyMeasurementsCm>, sqlx::Error> {
         let records = sqlx::query!(
-            "SELECT * FROM users_body_measurements_cm WHERE user_id = $1 AND date_at = $2;",
-            Uuid::from(&user_id),
-            NaiveDate::from(&date_at)
+            "SELECT * FROM users_body_measurements_cm WHERE user_id = $1;",
+            Uuid::from(user_id),
         )
         .fetch_all(self.database.as_ref())
         .await?;
@@ -149,21 +149,24 @@ impl UserBodyMeasurementsRepository {
         Ok(records
             .iter()
             .map(|record| {
-                BodyMeasurementsCm::builder(user_id.clone(), date_at.clone())
-                    .left_arm(to_opt_pos_f32(record.left_arm))
-                    .right_arm(to_opt_pos_f32(record.right_arm))
-                    .left_thigh(to_opt_pos_f32(record.left_thigh))
-                    .right_thigh(to_opt_pos_f32(record.right_thigh))
-                    .left_wrist(to_opt_pos_f32(record.left_wrist))
-                    .right_wrist(to_opt_pos_f32(record.right_wrist))
-                    .left_calf(to_opt_pos_f32(record.left_calf))
-                    .right_calf(to_opt_pos_f32(record.right_calf))
-                    .height(to_opt_pos_f32(record.height))
-                    .neck(to_opt_pos_f32(record.neck))
-                    .hips(to_opt_pos_f32(record.hips))
-                    .torso(to_opt_pos_f32(record.torso))
-                    .waist(to_opt_pos_f32(record.waist))
-                    .build()
+                BodyMeasurementsCm::builder(
+                    user_id.clone(),
+                    PastNaiveDate::from_trusted(&record.date_at),
+                )
+                .left_arm(to_opt_pos_f32(record.left_arm))
+                .right_arm(to_opt_pos_f32(record.right_arm))
+                .left_thigh(to_opt_pos_f32(record.left_thigh))
+                .right_thigh(to_opt_pos_f32(record.right_thigh))
+                .left_wrist(to_opt_pos_f32(record.left_wrist))
+                .right_wrist(to_opt_pos_f32(record.right_wrist))
+                .left_calf(to_opt_pos_f32(record.left_calf))
+                .right_calf(to_opt_pos_f32(record.right_calf))
+                .height(to_opt_pos_f32(record.height))
+                .neck(to_opt_pos_f32(record.neck))
+                .hips(to_opt_pos_f32(record.hips))
+                .torso(to_opt_pos_f32(record.torso))
+                .waist(to_opt_pos_f32(record.waist))
+                .build()
             })
             .collect())
     }

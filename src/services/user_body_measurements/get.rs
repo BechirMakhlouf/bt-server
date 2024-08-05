@@ -3,23 +3,21 @@ use actix_web::{error, web, HttpResponse, Responder};
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::{models::user_weight::UserWeight, services::AppState, ACCESS_TOKEN_NAME};
+use crate::{services::AppState, types::past_naive_date::PastNaiveDate, ACCESS_TOKEN_NAME};
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Parameters {
-    pub weight_kg: f32,
     pub date: NaiveDate,
 }
 
-pub async fn put(
+pub async fn get(
     session: Session,
     query_params: web::Query<Parameters>,
     app_state: web::Data<AppState>,
 ) -> actix_web::Result<impl Responder> {
     let access_token = match session.get::<String>(ACCESS_TOKEN_NAME) {
         Ok(Some(token)) => token,
-        Ok(None) => return Err(error::ErrorUnauthorized("Unauthenticated")),
+        Ok(None) => return Err(error::ErrorUnauthorized("unauthenticated")),
         Err(err) => return Err(error::ErrorUnauthorized(err)),
     };
 
@@ -30,18 +28,19 @@ pub async fn put(
 
     let user_id = token_data.claims.user_id;
 
-    let weight_log = match UserWeight::new(user_id, query_params.weight_kg, query_params.date) {
-        Ok(user_weight) => user_weight,
+    let date_at = match PastNaiveDate::try_from(query_params.date) {
+        Ok(date_at) => date_at,
         Err(err) => return Err(error::ErrorBadRequest(err)),
     };
 
     match app_state
         .repositories
-        .user_weight
-        .add_or_update(&weight_log)
+        .user_body_measurements
+        .get(user_id, date_at)
         .await
     {
-        Ok(_) => Ok(HttpResponse::Ok()),
-        Err(err) => Err(actix_web::error::ErrorInternalServerError(err)),
+        Ok(Some(settings)) => Ok(HttpResponse::Ok().json(settings)),
+        Ok(None) => Err(error::ErrorNotFound("User weight not found.")),
+        Err(_) => Ok(HttpResponse::InternalServerError().finish()),
     }
 }

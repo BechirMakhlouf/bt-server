@@ -32,3 +32,8 @@ impl From<&PastNaiveDate> for NaiveDate {
         value.0
     }
 }
+impl PastNaiveDate {
+    pub fn from_trusted(value: &chrono::NaiveDate) -> Self {
+        Self(*value)
+    }
+}

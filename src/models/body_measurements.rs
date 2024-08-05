@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::types::past_naive_date::PastNaiveDate;
-use crate::types::positive_non_zero_float::PositiveNonZeroF32;
+use crate::types::positive_non_zero_float::PosNonZeroF32;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -43,24 +43,24 @@ impl From<&Id> for Uuid {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BodyMeasurementsCm {
     pub user_id: user::Id,
     pub date_at: PastNaiveDate,
 
-    pub height: Option<PositiveNonZeroF32>,
-    pub left_arm: Option<PositiveNonZeroF32>,
-    pub right_arm: Option<PositiveNonZeroF32>,
-    pub left_thigh: Option<PositiveNonZeroF32>,
-    pub right_thigh: Option<PositiveNonZeroF32>,
-    pub left_wrist: Option<PositiveNonZeroF32>,
-    pub right_wrist: Option<PositiveNonZeroF32>,
-    pub neck: Option<PositiveNonZeroF32>,
-    pub left_calf: Option<PositiveNonZeroF32>,
-    pub right_calf: Option<PositiveNonZeroF32>,
-    pub hips: Option<PositiveNonZeroF32>,
-    pub torso: Option<PositiveNonZeroF32>,
-    pub waist: Option<PositiveNonZeroF32>,
+    pub height: Option<PosNonZeroF32>,
+    pub left_arm: Option<PosNonZeroF32>,
+    pub right_arm: Option<PosNonZeroF32>,
+    pub left_thigh: Option<PosNonZeroF32>,
+    pub right_thigh: Option<PosNonZeroF32>,
+    pub left_wrist: Option<PosNonZeroF32>,
+    pub right_wrist: Option<PosNonZeroF32>,
+    pub neck: Option<PosNonZeroF32>,
+    pub left_calf: Option<PosNonZeroF32>,
+    pub right_calf: Option<PosNonZeroF32>,
+    pub hips: Option<PosNonZeroF32>,
+    pub torso: Option<PosNonZeroF32>,
+    pub waist: Option<PosNonZeroF32>,
     pub weight_kg: Option<WeightKg>,
 }
 impl BodyMeasurementsCm {
@@ -73,20 +73,19 @@ impl BodyMeasurementsCm {
 pub struct BodyMeasurementsCmBuilder {
     user_id: user::Id,
     date_at: PastNaiveDate,
-    height: Option<PositiveNonZeroF32>,
-
-    left_arm: Option<PositiveNonZeroF32>,
-    right_arm: Option<PositiveNonZeroF32>,
-    left_thigh: Option<PositiveNonZeroF32>,
-    right_thigh: Option<PositiveNonZeroF32>,
-    left_wrist: Option<PositiveNonZeroF32>,
-    right_wrist: Option<PositiveNonZeroF32>,
-    neck: Option<PositiveNonZeroF32>,
-    left_calf: Option<PositiveNonZeroF32>,
-    right_calf: Option<PositiveNonZeroF32>,
-    hips: Option<PositiveNonZeroF32>,
-    torso: Option<PositiveNonZeroF32>,
-    waist: Option<PositiveNonZeroF32>,
+    height: Option<PosNonZeroF32>,
+    left_arm: Option<PosNonZeroF32>,
+    right_arm: Option<PosNonZeroF32>,
+    left_thigh: Option<PosNonZeroF32>,
+    right_thigh: Option<PosNonZeroF32>,
+    left_wrist: Option<PosNonZeroF32>,
+    right_wrist: Option<PosNonZeroF32>,
+    neck: Option<PosNonZeroF32>,
+    left_calf: Option<PosNonZeroF32>,
+    right_calf: Option<PosNonZeroF32>,
+    hips: Option<PosNonZeroF32>,
+    torso: Option<PosNonZeroF32>,
+    waist: Option<PosNonZeroF32>,
     weight_kg: Option<WeightKg>,
 }
 
@@ -119,55 +118,55 @@ impl BodyMeasurementsCmBuilder {
         }
     }
 
-    pub fn height(mut self, height: Option<PositiveNonZeroF32>) -> Self {
+    pub fn height(mut self, height: Option<PosNonZeroF32>) -> Self {
         self.height = height;
         self
     }
-    pub fn left_arm(mut self, left_arm: Option<PositiveNonZeroF32>) -> Self {
+    pub fn left_arm(mut self, left_arm: Option<PosNonZeroF32>) -> Self {
         self.left_arm = left_arm;
         self
     }
-    pub fn right_arm(mut self, right_arm: Option<PositiveNonZeroF32>) -> Self {
+    pub fn right_arm(mut self, right_arm: Option<PosNonZeroF32>) -> Self {
         self.right_arm = right_arm;
         self
     }
-    pub fn left_thigh(mut self, left_thigh: Option<PositiveNonZeroF32>) -> Self {
+    pub fn left_thigh(mut self, left_thigh: Option<PosNonZeroF32>) -> Self {
         self.left_thigh = left_thigh;
         self
     }
-    pub fn right_thigh(mut self, right_thigh: Option<PositiveNonZeroF32>) -> Self {
+    pub fn right_thigh(mut self, right_thigh: Option<PosNonZeroF32>) -> Self {
         self.right_thigh = right_thigh;
         self
     }
-    pub fn left_wrist(mut self, left_wrist: Option<PositiveNonZeroF32>) -> Self {
+    pub fn left_wrist(mut self, left_wrist: Option<PosNonZeroF32>) -> Self {
         self.left_wrist = left_wrist;
         self
     }
-    pub fn right_wrist(mut self, right_wrist: Option<PositiveNonZeroF32>) -> Self {
+    pub fn right_wrist(mut self, right_wrist: Option<PosNonZeroF32>) -> Self {
         self.right_wrist = right_wrist;
         self
     }
-    pub fn neck(mut self, neck: Option<PositiveNonZeroF32>) -> Self {
+    pub fn neck(mut self, neck: Option<PosNonZeroF32>) -> Self {
         self.neck = neck;
         self
     }
-    pub fn left_calf(mut self, left_calf: Option<PositiveNonZeroF32>) -> Self {
+    pub fn left_calf(mut self, left_calf: Option<PosNonZeroF32>) -> Self {
         self.left_calf = left_calf;
         self
     }
-    pub fn right_calf(mut self, right_calf: Option<PositiveNonZeroF32>) -> Self {
+    pub fn right_calf(mut self, right_calf: Option<PosNonZeroF32>) -> Self {
         self.right_calf = right_calf;
         self
     }
-    pub fn hips(mut self, hips: Option<PositiveNonZeroF32>) -> Self {
+    pub fn hips(mut self, hips: Option<PosNonZeroF32>) -> Self {
         self.hips = hips;
         self
     }
-    pub fn torso(mut self, torso: Option<PositiveNonZeroF32>) -> Self {
+    pub fn torso(mut self, torso: Option<PosNonZeroF32>) -> Self {
         self.torso = torso;
         self
     }
-    pub fn waist(mut self, waist: Option<PositiveNonZeroF32>) -> Self {
+    pub fn waist(mut self, waist: Option<PosNonZeroF32>) -> Self {
         self.waist = waist;
         self
     }

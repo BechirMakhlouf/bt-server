@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Not a positive, non-zero number: {0}")]
@@ -28,10 +30,10 @@ pub fn to_some_f64(n: Option<PositiveNonZeroF64>) -> Option<f64> {
     n.map(|n| n.into())
 }
 
-#[derive(Debug, PartialEq, PartialOrd)]
-pub struct PositiveNonZeroF32(f32);
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub struct PosNonZeroF32(f32);
 
-impl TryFrom<f32> for PositiveNonZeroF32 {
+impl TryFrom<f32> for PosNonZeroF32 {
     type Error = Error;
     fn try_from(value: f32) -> Result<Self, Self::Error> {
         if value > 0.0 {
@@ -42,20 +44,20 @@ impl TryFrom<f32> for PositiveNonZeroF32 {
     }
 }
 
-impl From<PositiveNonZeroF32> for f32 {
-    fn from(value: PositiveNonZeroF32) -> Self {
+impl From<PosNonZeroF32> for f32 {
+    fn from(value: PosNonZeroF32) -> Self {
         value.0
     }
 }
-impl PositiveNonZeroF32 {
+impl PosNonZeroF32 {
     pub fn from_trusted(n: f32) -> Self {
         Self(n)
     }
 }
-pub fn to_optional_f32(n: Option<PositiveNonZeroF32>) -> Option<f32> {
+pub fn to_optional_f32(n: Option<PosNonZeroF32>) -> Option<f32> {
     n.map(|n| n.into())
 }
 
-pub fn to_opt_pos_f32(n: Option<f32>) -> Option<PositiveNonZeroF32> {
-    Some(PositiveNonZeroF32::from_trusted(n?))
+pub fn to_opt_pos_f32(n: Option<f32>) -> Option<PosNonZeroF32> {
+    Some(PosNonZeroF32::from_trusted(n?))
 }
