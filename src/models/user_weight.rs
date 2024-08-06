@@ -59,7 +59,6 @@ impl WeightDate {
         if date > chrono::Utc::now().date_naive() {
             return Err(Error::InvalidWeightDate(date));
         }
-
         Ok(Self(date))
     }
 }
