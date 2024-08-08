@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod configuration;
+pub mod file_storage;
 pub mod guards;
 pub mod middleware;
 pub mod models;
@@ -23,7 +24,7 @@ use std::{net::TcpListener, sync::Arc};
 
 const ACCESS_TOKEN_NAME: &str = "access-token";
 const _REFRESH_TOKEN_NAME: &str = "refresh-token";
-const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
+const SECS_IN_WEEK: i64 = 604800;
 
 pub fn configure_app_state(settings: &Settings) -> AppState {
     let db_pool = Arc::new(
