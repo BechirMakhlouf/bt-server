@@ -33,19 +33,47 @@ pub trait MediaStorage {
         content_type: &str,
         is_private: bool,
     ) -> impl Future<Output = Result<()>>;
-    fn get_url(
-        &self,
-        media_id: &str,
-        duration: std::time::Duration,
-    ) -> impl Future<Output = Result<String>>;
+    fn get_url(&self, media_id: &str) -> impl Future<Output = Result<String>>;
     fn delete(&self, media_id: &str) -> impl Future<Output = Result<()>>;
 }
 
 pub struct AwsMediaStorage {
     bucket_name: String,
     client: aws_sdk_s3::Client,
+    url_duration: std::time::Duration,
 }
 
+impl AwsMediaStorage {
+    pub fn new(
+        client: aws_sdk_s3::Client,
+        bucket_name: String,
+        url_duration: std::time::Duration,
+    ) -> Self {
+        Self {
+            client,
+            bucket_name,
+            url_duration,
+        }
+    }
+    async fn check_file_exists(&self, object_key: &str) -> Result<bool> {
+        let result = self
+            .client
+            .head_object()
+            .bucket(&self.bucket_name)
+            .key(object_key)
+            .send()
+            .await;
+
+        match result {
+            Ok(_) => Ok(true),
+            Err(SdkError::ServiceError(err)) => match err.err() {
+                HeadObjectError::NotFound(err) => Err(Error::FileNotFound(err.to_string())),
+                err => Err(Error::InternalError(err.to_string())),
+            },
+            Err(err) => Err(Error::InternalError(err.to_string())),
+        }
+    }
+}
 impl MediaStorage for AwsMediaStorage {
     async fn put(
         &self,
@@ -69,10 +97,10 @@ impl MediaStorage for AwsMediaStorage {
             })
             .send()
             .await
-            .map_err(|err| Error::UploadFileFailed(err.to_string()))
             .map(|_| ())
+            .map_err(|err| Error::UploadFileFailed(err.to_string()))
     }
-    async fn get_url(&self, media_id: &str, duration: std::time::Duration) -> Result<String> {
+    async fn get_url(&self, media_id: &str) -> Result<String> {
         self.check_file_exists(media_id).await?;
 
         let presigned_request = self
@@ -80,7 +108,7 @@ impl MediaStorage for AwsMediaStorage {
             .get_object()
             .bucket(&self.bucket_name)
             .key(media_id)
-            .presigned(PresigningConfig::expires_in(duration).unwrap())
+            .presigned(PresigningConfig::expires_in(self.url_duration).unwrap())
             .await;
 
         match presigned_request {
@@ -102,27 +130,6 @@ impl MediaStorage for AwsMediaStorage {
 
         match result {
             Ok(_) => Ok(()),
-            Err(err) => Err(Error::InternalError(err.to_string())),
-        }
-    }
-}
-
-impl AwsMediaStorage {
-    async fn check_file_exists(&self, object_key: &str) -> Result<bool> {
-        let result = self
-            .client
-            .head_object()
-            .bucket(&self.bucket_name)
-            .key(object_key)
-            .send()
-            .await;
-
-        match result {
-            Ok(_) => Ok(true),
-            Err(SdkError::ServiceError(err)) => match err.err() {
-                HeadObjectError::NotFound(err) => Err(Error::FileNotFound(err.to_string())),
-                err => Err(Error::InternalError(err.to_string())),
-            },
             Err(err) => Err(Error::InternalError(err.to_string())),
         }
     }
