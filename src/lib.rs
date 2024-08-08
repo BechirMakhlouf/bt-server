@@ -16,6 +16,7 @@ use actix_web::{
     App, HttpServer,
 };
 use configuration::Settings;
+use file_storage::AwsMediaStorage;
 use log::info;
 use models::session::SessionFactory;
 use repositories::Repositories;
@@ -24,9 +25,9 @@ use std::{net::TcpListener, sync::Arc};
 
 const ACCESS_TOKEN_NAME: &str = "access-token";
 const _REFRESH_TOKEN_NAME: &str = "refresh-token";
-const SECS_IN_WEEK: i64 = 604800;
+const SECS_IN_WEEK: u64 = 604800;
 
-pub fn configure_app_state(settings: &Settings) -> AppState {
+pub async fn configure_app_state(settings: &Settings) -> AppState {
     let db_pool = Arc::new(
         settings
             .database
@@ -35,12 +36,24 @@ pub fn configure_app_state(settings: &Settings) -> AppState {
     );
 
     let session_factory = SessionFactory::new(settings.jwt_secret.clone(), "users".into(), 60000);
+
+    let aws_shared_config = aws_config::load_from_env().await;
+    let s3_client = aws_sdk_s3::Client::new(&aws_shared_config);
+
+    let aws_media_storage = AwsMediaStorage::new(
+        s3_client,
+        "bodyTrackr".into(),
+        std::time::Duration::from_secs(SECS_IN_WEEK),
+    );
+
     AppState::new(
         Repositories::new(db_pool),
         session_factory,
         settings.app_env.clone(),
+        aws_media_storage,
     )
 }
+
 pub async fn run_server(settings: Settings) -> std::io::Result<()> {
     let addr = TcpListener::bind(format!("{}:{}", settings.host, settings.port))
         .unwrap()
@@ -49,7 +62,7 @@ pub async fn run_server(settings: Settings) -> std::io::Result<()> {
 
     info!("Server running on: {}", addr.to_string());
 
-    let app_state = configure_app_state(&settings);
+    let app_state = configure_app_state(&settings).await;
 
     HttpServer::new(move || {
         App::new()
@@ -59,7 +72,8 @@ pub async fn run_server(settings: Settings) -> std::io::Result<()> {
                 SessionMiddleware::builder(CookieSessionStore::default(), Key::from(&[0; 64]))
                     .cookie_name("session".into())
                     .session_lifecycle(
-                        PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK)),
+                        PersistentSession::default()
+                            .session_ttl(Duration::seconds(SECS_IN_WEEK.try_into().unwrap())),
                     )
                     .cookie_same_site(SameSite::Strict)
                     .build(),

@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use std::{future::Future, path};
+use std::{fmt::Debug, future::Future, path};
 
 use aws_sdk_s3::{
     error::SdkError, operation::head_object::HeadObjectError, presigning::PresigningConfig,
@@ -37,6 +37,7 @@ pub trait MediaStorage {
     fn delete(&self, media_id: &str) -> impl Future<Output = Result<()>>;
 }
 
+#[derive(Debug, Clone)]
 pub struct AwsMediaStorage {
     bucket_name: String,
     client: aws_sdk_s3::Client,
@@ -74,6 +75,7 @@ impl AwsMediaStorage {
         }
     }
 }
+
 impl MediaStorage for AwsMediaStorage {
     async fn put(
         &self,
