@@ -2,7 +2,7 @@
 CREATE TABLE pr_media (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   pr_id UUID NOT NULL,
-  media_url TEXT NOT NULL,
+  media_id TEXT NOT NULL,
   created_at TIMESTAMP
   WITH
     TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

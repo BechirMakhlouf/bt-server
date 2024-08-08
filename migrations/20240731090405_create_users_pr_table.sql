@@ -4,6 +4,7 @@ CREATE TABLE users_pr (
   user_id UUID NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
+  medias TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   tags VARCHAR(128)[] NOT NULL DEFAULT array[]::varchar[],
   date_at DATE NOT NULL CHECK (date_at <= CURRENT_DATE),
   created_at TIMESTAMP
