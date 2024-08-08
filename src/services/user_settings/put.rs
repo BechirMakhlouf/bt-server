@@ -1,8 +1,8 @@
 use actix_session::Session;
-use actix_web::{error, web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
-use crate::{models::user_settings::UsersSettings, services::AppState, ACCESS_TOKEN_NAME};
+use crate::{models::user_settings::UsersSettings, services::AppState};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RequestBody {

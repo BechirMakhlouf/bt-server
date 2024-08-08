@@ -1,7 +1,7 @@
 use actix_session::Session;
 use actix_web::{error, web, HttpResponse, Responder};
 
-use crate::{services::AppState, ACCESS_TOKEN_NAME};
+use crate::services::AppState;
 
 pub async fn delete(
     session: Session,

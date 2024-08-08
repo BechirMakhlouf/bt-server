@@ -7,7 +7,6 @@ use crate::{
     models,
     services::AppState,
     types::{past_naive_date::PastNaiveDate, positive_non_zero_float::to_opt_pos_f32},
-    ACCESS_TOKEN_NAME,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,18 +34,7 @@ pub async fn patch(
     query_params: web::Query<Parameters>,
     app_state: web::Data<AppState>,
 ) -> actix_web::Result<impl Responder> {
-    let access_token = match session.get::<String>(ACCESS_TOKEN_NAME) {
-        Ok(Some(token)) => token,
-        Ok(None) => return Err(error::ErrorUnauthorized("Unauthenticated")),
-        Err(err) => return Err(error::ErrorUnauthorized(err)),
-    };
-
-    let token_data = match app_state.session_factory.parse_session_jwt(&access_token) {
-        Ok(token_data) => token_data,
-        Err(err) => return Err(error::ErrorUnauthorized(err)),
-    };
-
-    let user_id = token_data.claims.user_id;
+    let user_id = crate::middleware::is_authenticated(&session, &app_state)?;
 
     let measurement_date = match PastNaiveDate::try_from(query_params.date) {
         Ok(date) => date,

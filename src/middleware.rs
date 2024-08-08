@@ -20,5 +20,5 @@ pub fn is_authenticated(
 
     let user_id = token_data.claims.user_id;
 
-    return Ok(user_id);
+    Ok(user_id)
 }

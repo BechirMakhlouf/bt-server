@@ -20,11 +20,12 @@ impl UserProfileRepository {
         sqlx::query!("INSERT INTO users_profiles (user_id, url, picture_url, description) VALUES ($1, $2, $3, $4)",
         Uuid::from(&user_profile.user_id),
         user_profile.url.as_str(),
-        user_profile.picture_url.as_str(),
+        user_profile.picture_id.as_str(),
         user_profile.description).execute(self.database.as_ref()).await?;
 
         Ok(())
     }
+
     pub async fn update(&self, user_profile: UserProfile) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "UPDATE users_profiles SET
@@ -34,7 +35,7 @@ impl UserProfileRepository {
             WHERE
                     user_id = $4",
             user_profile.url.as_str(),
-            user_profile.picture_url.as_str(),
+            user_profile.picture_id.as_str(),
             user_profile.description,
             Uuid::from(user_profile.user_id)
         )
@@ -53,8 +54,8 @@ impl UserProfileRepository {
         .await?;
         Ok(UserProfile::new(
             query_result.user_id.into(),
-            query_result.url.as_str().try_into().unwrap(),
-            query_result.picture_url.as_str().try_into().unwrap(),
+            query_result.url,
+            query_result.picture_url,
             query_result.description,
         ))
     }

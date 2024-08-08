@@ -85,10 +85,13 @@ impl MediaStorage for AwsMediaStorage {
         is_private: bool,
     ) -> Result<()> {
         use aws_sdk_s3::primitives::ByteStream;
-        let body = ByteStream::from_path(file_path).await.unwrap();
+        let body = ByteStream::from_path(file_path)
+            .await
+            .map_err(|err| Error::InternalError(err.to_string()))?;
 
         self.client
             .put_object()
+            .bucket(self.bucket_name.as_str())
             .body(body)
             .key(file_name)
             .content_type(content_type)
@@ -102,6 +105,7 @@ impl MediaStorage for AwsMediaStorage {
             .map(|_| ())
             .map_err(|err| Error::UploadFileFailed(err.to_string()))
     }
+
     async fn get_url(&self, media_id: &str) -> Result<String> {
         self.check_file_exists(media_id).await?;
 

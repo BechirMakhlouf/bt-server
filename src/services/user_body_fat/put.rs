@@ -3,7 +3,7 @@ use actix_web::{error, web, HttpResponse, Responder};
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::{models::body_fat::UserBodyFat, services::AppState, ACCESS_TOKEN_NAME};
+use crate::{models::body_fat::UserBodyFat, services::AppState};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RequestBody {

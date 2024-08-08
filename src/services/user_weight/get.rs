@@ -3,7 +3,7 @@ use actix_web::{error, web, HttpResponse, Responder};
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::{models::user_weight::WeightDate, services::AppState, ACCESS_TOKEN_NAME};
+use crate::{models::user_weight::WeightDate, services::AppState};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Parameters {

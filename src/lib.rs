@@ -42,7 +42,7 @@ pub async fn configure_app_state(settings: &Settings) -> AppState {
 
     let aws_media_storage = AwsMediaStorage::new(
         s3_client,
-        "bodyTrackr".into(),
+        "bodytrackr".into(),
         std::time::Duration::from_secs(SECS_IN_WEEK),
     );
 
